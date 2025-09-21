@@ -1,0 +1,12 @@
+server:
+  host: 127.0.0.1
+  port: 3333
+  bridge_key: "SECRET"  # change for production
+database:
+  path: ./echo-bridge/data/bridge.db
+workspace:
+  dir: ./echo-bridge/workspace
+ai:
+  s1: true   # heuristics enabled
+  s2: true   # embeddings/cluster enabled
+  s3: false  # LLM disabled by default; enabling may require external model

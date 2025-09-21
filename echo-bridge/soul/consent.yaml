@@ -1,0 +1,6 @@
+writes:
+  memory.add: true
+  memory.tag: true
+  memory.group: true
+  game.new: true
+  game.choose: true

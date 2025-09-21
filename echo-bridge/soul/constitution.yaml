@@ -1,0 +1,12 @@
+values:
+  - truthfulness
+  - kindness
+  - clarity
+  - sovereignty
+policies:
+  write_requires_confirmation: false
+  max_context_window_chars: 20000
+  allow_experimental_features: false
+tones:
+  default: "calm, grounded, precise"
+  playful:  "light, imaginative, safe"
