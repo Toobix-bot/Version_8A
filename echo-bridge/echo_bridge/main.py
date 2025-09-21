@@ -8,6 +8,8 @@ from typing import Any, Optional
 
 import yaml
 from fastapi import Depends, FastAPI, Header, HTTPException, Query
+from fastapi import Request
+from starlette.responses import Response
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -17,8 +19,10 @@ from .services.actions_service import ActionError, PreconditionFailed, dispatch
 from .ai.brain import Policy
 from .soul.loader import load_soul
 from .soul.state import get_soul, init_soul
+from .mcp_server import router as mcp_router
 from .services.fs_service import FSError, list_dir, read_file
 from .services.memory_service import Chunk, Hit, add_chunks, get_chunk, search
+from .mcp_server import register_mcp
 
 
 class Settings(BaseModel):
@@ -30,6 +34,11 @@ class Settings(BaseModel):
     ai_s1: bool = True
     ai_s2: bool = True
     ai_s3: bool = False
+    ai_tiers: dict[str, dict[str, object]] = {
+        "under": {"enabled": True, "timeout_ms": 400, "allow_llm": False},
+        "core": {"enabled": True, "timeout_ms": 800, "allow_llm": False},
+        "over": {"enabled": True, "timeout_ms": 1600, "allow_llm": False},
+    }
 
 
 def load_settings() -> Settings:
@@ -37,14 +46,15 @@ def load_settings() -> Settings:
     # Fallback if moved, also try repo root
     if not cfg_path.exists():
         cfg_path = Path.cwd() / "config.yaml"
-    data = {}
+    data: dict[str, Any] = {}
     if cfg_path.exists():
         with cfg_path.open("r", encoding="utf-8") as f:
-            data = yaml.safe_load(f) or {}
-    server = data.get("server", {})
-    database = data.get("database", {})
-    workspace = data.get("workspace", {})
-    ai = data.get("ai", {})
+            loaded: Any = yaml.safe_load(f) or {}
+            data = cast(dict[str, Any], loaded) if isinstance(loaded, dict) else {}
+    server: dict[str, Any] = data.get("server", {}) if isinstance(data.get("server", {}), dict) else {}
+    database: dict[str, Any] = data.get("database", {}) if isinstance(data.get("database", {}), dict) else {}
+    workspace: dict[str, Any] = data.get("workspace", {}) if isinstance(data.get("workspace", {}), dict) else {}
+    ai: dict[str, Any] = data.get("ai", {}) if isinstance(data.get("ai", {}), dict) else {}
     settings = Settings(
         host=server.get("host", "127.0.0.1"),
         port=int(server.get("port", 3333)),
@@ -54,6 +64,11 @@ def load_settings() -> Settings:
         ai_s1=bool(ai.get("s1", True)),
         ai_s2=bool(ai.get("s2", True)),
         ai_s3=bool(ai.get("s3", False)),
+        ai_tiers=ai.get("tiers", {
+            "under": {"enabled": True, "timeout_ms": 400, "allow_llm": False},
+            "core": {"enabled": True, "timeout_ms": 800, "allow_llm": False},
+            "over": {"enabled": True, "timeout_ms": 1600, "allow_llm": False},
+        }),
     )
     return settings
 
@@ -78,7 +93,7 @@ class IngestRequest(BaseModel):
     source: str
     title: Optional[str] = None
     texts: list[str]
-    meta: Optional[dict] = None
+    meta: Optional[dict[str, Any]] = None
 
 
 class IngestResponse(BaseModel):
@@ -96,6 +111,8 @@ class ChunkResponse(Chunk):
 class ActionRequest(BaseModel):
     command: str
     args: dict[str, Any]
+    tier_mode: Optional[str] = None
+    confirm: Optional[bool] = None
 
 
 class ActionResponse(BaseModel):
@@ -132,6 +149,8 @@ logger.addHandler(handler)
 logger.setLevel(logging.INFO)
 
 app = FastAPI(title="ECHO-BRIDGE")
+app.include_router(mcp_router)
+register_mcp(app, settings)
 app.mount(
     "/public",
     StaticFiles(directory=str(Path(__file__).resolve().parent.parent / "public"), html=True),
@@ -140,10 +159,10 @@ app.mount(
 
 
 @app.middleware("http")
-async def logging_middleware(request, call_next):
+async def logging_middleware(request: Request, call_next) -> Response:
     start = perf_counter()
     try:
-        response = await call_next(request)
+    response = await call_next(request)  # type: ignore[no-any-return]
         outcome = "success" if response.status_code < 400 else "error"
     except Exception as e:
         outcome = "exception"
@@ -223,9 +242,10 @@ def actions_run(req: ActionRequest) -> ActionResponse:
         if req.command in write_commands:
             consent_checked = True
             requires_confirm = bool(soul.policies.get("write_requires_confirmation", False))
-            if requires_confirm and not bool(req.args.get("confirm", False)):
+            confirm_flag = req.confirm if req.confirm is not None else bool(req.args.get("confirm", False))
+            if requires_confirm and not confirm_flag:
                 raise PreconditionFailed("Write requires confirmation")
-        result = dispatch(req.command, req.args, policy)
+        result = dispatch(req.command, req.args, policy, tier_mode=req.tier_mode, tiers_cfg=settings.ai_tiers)
         try:
             soul.append_event(f"actions.run:{req.command}", req.args, result, consent_checked=consent_checked)
         except Exception:
@@ -249,7 +269,7 @@ class ChatGPTIngest(BaseModel):
 @app.post("/ingest/chatgpt", response_model=IngestResponse, dependencies=[Depends(get_api_key)])
 def ingest_chatgpt(req: ChatGPTIngest) -> IngestResponse:
     # Extract message contents as texts
-    texts = []
+    texts: list[str] = []
     for m in req.messages:
         content = m.get("content")
         if isinstance(content, str):

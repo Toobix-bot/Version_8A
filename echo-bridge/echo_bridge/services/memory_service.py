@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from typing import Any, Optional
+import re
+import sqlite3
 
 from pydantic import BaseModel
 
@@ -44,25 +46,38 @@ def add_chunks(source: str, title: str | None, texts: list[str], meta: dict[str,
     return count
 
 
+def _sanitize_query(q: str) -> str:
+    # Keep only alphanumerics (incl. basic German letters); drop special syntax like ':' that can break FTS MATCH
+    toks = re.findall(r"[A-Za-zÄÖÜäöüß0-9]+", q)
+    return " ".join(toks[:32])  # cap tokens for safety
+
+
 def search(q: str, k: int = 5) -> list[Hit]:
     conn = get_conn()
     cur = conn.cursor()
-    # Using bm25 for ranking and snippet for highlights
-    cur.execute(
-        """
-        SELECT c.id as id,
-               0.0 AS score,
-               snippet(chunks_fts, 0, '[', ']', ' … ', 10) AS snip,
-               c.doc_source as source,
-               c.doc_title as title
-        FROM chunks_fts
-        JOIN chunks c ON c.id = chunks_fts.rowid
-        WHERE chunks_fts MATCH ?
-        ORDER BY rank LIMIT ?
-        """,
-        (q, k),
-    )
-    rows = cur.fetchall()
+    sanitized = _sanitize_query(q or "")
+    if not sanitized:
+        return []
+    try:
+        # Using rank and snippet for highlights; sanitized query avoids FTS parser errors
+        cur.execute(
+            """
+            SELECT c.id as id,
+                0.0 AS score,
+                snippet(chunks_fts, 0, '[', ']', ' … ', 10) AS snip,
+                c.doc_source as source,
+                c.doc_title as title
+            FROM chunks_fts
+            JOIN chunks c ON c.id = chunks_fts.rowid
+            WHERE chunks_fts MATCH ?
+            ORDER BY rank LIMIT ?
+            """,
+            (sanitized, k),
+        )
+        rows = cur.fetchall()
+    except sqlite3.OperationalError:
+        # In case of unexpected syntax, fall back to empty
+        return []
     hits = [Hit(id=row["id"], score=row["score"], snippet=row["snip"], source=row["source"], title=row["title"]) for row in rows]
     return hits
 
