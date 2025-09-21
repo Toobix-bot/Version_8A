@@ -4,7 +4,7 @@ import json
 import logging
 from pathlib import Path
 from time import perf_counter
-from typing import Any, Optional
+from typing import Any, Optional, cast
 
 import yaml
 from fastapi import Depends, FastAPI, Header, HTTPException, Query
@@ -162,7 +162,7 @@ app.mount(
 async def logging_middleware(request: Request, call_next) -> Response:
     start = perf_counter()
     try:
-    response = await call_next(request)  # type: ignore[no-any-return]
+        response = await call_next(request)  # type: ignore[no-any-return]
         outcome = "success" if response.status_code < 400 else "error"
     except Exception as e:
         outcome = "exception"
