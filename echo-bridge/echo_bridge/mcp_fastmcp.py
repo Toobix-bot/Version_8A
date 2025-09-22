@@ -12,10 +12,14 @@ for ChatGPT Developer Mode connectors (ws://127.0.0.1:3334/mcp).
 """
 
 from typing import Any, Optional
-from pathlib import Path
 import argparse
+import os
 
 from fastmcp import FastMCP
+from fastmcp.server.auth.auth import (
+    RemoteAuthProvider,
+    TokenVerifier,
+)
 
 from .main import settings
 from .services.memory_service import search as mem_search, add_chunks
@@ -23,7 +27,8 @@ from .services.fs_service import list_dir as fs_list, read_file as fs_read
 from .services.actions_service import dispatch as actions_dispatch
 from .ai.brain import Policy
 
-mcp = FastMCP("ECHO Bridge MCP")
+# Default server used for tool registration and tests (no auth by default)
+mcp: FastMCP = FastMCP("ECHO Bridge MCP")
 
 
 @mcp.tool
@@ -99,6 +104,51 @@ def actions_run(
     return result
 
 
+def _parse_scopes(scopes_csv: Optional[str]) -> Optional[list[str]]:
+    scopes_csv = (scopes_csv or "").strip()
+    if not scopes_csv:
+        return None
+    return [s.strip() for s in scopes_csv.split(",") if s.strip()]
+
+
+def _resolve_auth(
+    provider: str | None,
+    base_url: str,
+    issuer_url: Optional[str] = None,
+    service_doc_url: Optional[str] = None,
+    required_scopes_csv: Optional[str] = None,
+) -> Optional[RemoteAuthProvider]:
+    """Return a RemoteAuthProvider (generic OAuth/OIDC resource protection) or None.
+
+    This secures the MCP server as a protected resource that accepts bearer tokens
+    issued by your authorization server (issuer_url). No client registration is performed.
+    """
+    name = (provider or "").strip().lower()
+    if not name or name == "none":
+        return None
+    if name != "oauth":
+        print(f"[MCP] Unknown auth provider '{name}'; supported: 'oauth'. Continuing without auth.")
+        return None
+    if not issuer_url:
+        print("[MCP] OAuth requested but --issuer-url missing; continuing without auth")
+        return None
+
+    required_scopes = _parse_scopes(required_scopes_csv)
+
+    try:
+        verifier = TokenVerifier(base_url=issuer_url, required_scopes=required_scopes)
+        return RemoteAuthProvider(
+            token_verifier=verifier,
+            authorization_servers=[issuer_url],  # type: ignore[arg-type]
+            base_url=base_url,  # type: ignore[arg-type]
+            resource_name="ECHO Bridge MCP",
+            resource_documentation=service_doc_url,  # type: ignore[arg-type]
+        )
+    except Exception as e:
+        print(f"[MCP] Failed to initialize OAuth (RemoteAuthProvider): {e}; continuing without auth")
+        return None
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run ECHO Bridge MCP server")
     parser.add_argument(
@@ -111,14 +161,36 @@ def main() -> None:
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=3334)
     parser.add_argument("--path", default="/mcp")
+    # Auth options (optional)
+    parser.add_argument("--auth", choices=["none", "oauth"], default=os.getenv("ECHO_MCP_AUTH", "none"))
+    parser.add_argument("--base-url", default=os.getenv("ECHO_MCP_BASE_URL"))
+    parser.add_argument("--issuer-url", default=os.getenv("ECHO_MCP_OAUTH_ISSUER_URL"))
+    parser.add_argument("--doc-url", default=os.getenv("ECHO_MCP_OAUTH_DOC_URL"))
+    parser.add_argument("--scopes", default=os.getenv("ECHO_MCP_OAUTH_SCOPES"))  # comma-separated
     args = parser.parse_args()
 
+    base_url = args.base_url or f"http://{args.host}:{args.port}"
+
+    auth_provider = _resolve_auth(
+        args.auth,
+        base_url=base_url,
+        issuer_url=args.issuer_url,
+        service_doc_url=args.doc_url,
+        required_scopes_csv=args.scopes,
+    )
+    server = mcp
+    if auth_provider:
+        print(f"[MCP] Starting with OAuth provider @ issuer: {args.issuer_url} base: {base_url}")
+    server = FastMCP("ECHO Bridge MCP", auth=auth_provider)
+    # Mount existing tools/resources/prompts without a prefix
+    server.mount(mcp)
+
     if args.transport == "stdio":
-        mcp.run(transport="stdio")
+        server.run(transport="stdio")
     elif args.transport == "sse":
-        mcp.run(transport="sse", host=args.host, port=args.port)
+        server.run(transport="sse", host=args.host, port=args.port)
     else:
-        mcp.run(transport="http", host=args.host, port=args.port, path=args.path)
+        server.run(transport="http", host=args.host, port=args.port, path=args.path)
 
 
 if __name__ == "__main__":
