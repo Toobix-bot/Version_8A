@@ -4,7 +4,7 @@ import json
 import logging
 from pathlib import Path
 from time import perf_counter
-from typing import Any, Optional, cast
+from typing import Any, Optional, cast, Awaitable, Callable
 
 import yaml
 from fastapi import Depends, FastAPI, Header, HTTPException, Query
@@ -13,7 +13,7 @@ from starlette.responses import Response
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 try:
-    # FastMCP FastAPI integration
+    # FastMCP FastAPI integration (optional)
     from fastmcp.fastapi import mount_mcp  # type: ignore
 except Exception:
     mount_mcp = None  # type: ignore
@@ -165,22 +165,33 @@ app.mount(
     name="public",
 )
 
-# Mount MCP under /mcp if the integration helper is available
+# Mount MCP under /mcp
 if mount_mcp:
+    # Preferred helper if available
     try:
         mount_mcp(app, mcp_server, path="/mcp")
     except Exception:
-        # Non-fatal; sidecar MCP remains available
+        pass
+else:
+    # Fallback: create FastMCP ASGI app and mount directly
+    try:
+        sub_app = mcp_server.http_app(path="/")
+        app.mount("/mcp", sub_app, name="mcp")
+    except Exception:
         pass
 
 
 @app.middleware("http")
-async def logging_middleware(request: Request, call_next) -> Response:
+async def logging_middleware(
+    request: Request,
+    call_next: Callable[[Request], Awaitable[Response]],
+) -> Response:
     start = perf_counter()
+    outcome = "error"
     try:
         response = await call_next(request)  # type: ignore[no-any-return]
         outcome = "success" if response.status_code < 400 else "error"
-    except Exception as e:
+    except Exception:
         outcome = "exception"
         raise
     finally:
