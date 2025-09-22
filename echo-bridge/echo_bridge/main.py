@@ -12,6 +12,11 @@ from fastapi import Request
 from starlette.responses import Response
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
+try:
+    # FastMCP FastAPI integration
+    from fastmcp.fastapi import mount_mcp  # type: ignore
+except Exception:
+    mount_mcp = None  # type: ignore
 from pydantic import BaseModel
 
 from .db import init_db
@@ -23,6 +28,7 @@ from .mcp_server import router as mcp_router
 from .services.fs_service import FSError, list_dir, read_file
 from .services.memory_service import Chunk, Hit, add_chunks, get_chunk, search
 from .mcp_server import register_mcp
+from .mcp_setup import mcp as mcp_server
 
 
 class Settings(BaseModel):
@@ -149,13 +155,23 @@ logger.addHandler(handler)
 logger.setLevel(logging.INFO)
 
 app = FastAPI(title="ECHO-BRIDGE")
-app.include_router(mcp_router)
-register_mcp(app, settings)
+# Include legacy MCP websocket routes only if FastMCP mount helper isn't available
+if not mount_mcp:
+    app.include_router(mcp_router)
+    register_mcp(app, settings)
 app.mount(
     "/public",
     StaticFiles(directory=str(Path(__file__).resolve().parent.parent / "public"), html=True),
     name="public",
 )
+
+# Mount MCP under /mcp if the integration helper is available
+if mount_mcp:
+    try:
+        mount_mcp(app, mcp_server, path="/mcp")
+    except Exception:
+        # Non-fatal; sidecar MCP remains available
+        pass
 
 
 @app.middleware("http")
