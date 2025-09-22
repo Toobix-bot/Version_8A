@@ -169,9 +169,9 @@ if mount_mcp:
     except Exception:
         pass
 else:
-    # Fallback: create FastMCP ASGI app and mount directly
+    # Fallback: create FastMCP ASGI app and mount directly (stateless for embedding)
     try:
-        sub_app = mcp_server.http_app(path="/")
+        sub_app = mcp_server.http_app(path="/", stateless_http=True)
         app.mount("/mcp", sub_app, name="mcp")
     except Exception:
         pass
