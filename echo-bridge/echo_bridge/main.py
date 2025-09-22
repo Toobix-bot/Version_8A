@@ -155,10 +155,6 @@ logger.addHandler(handler)
 logger.setLevel(logging.INFO)
 
 app = FastAPI(title="ECHO-BRIDGE")
-# Include legacy MCP websocket routes only if FastMCP mount helper isn't available
-if not mount_mcp:
-    app.include_router(mcp_router)
-    register_mcp(app, settings)
 app.mount(
     "/public",
     StaticFiles(directory=str(Path(__file__).resolve().parent.parent / "public"), html=True),
