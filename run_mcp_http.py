@@ -41,6 +41,7 @@ if __name__ == "__main__":
             host=host,
             port=port,
             path="/mcp",
+            stateless_http=True,
             log_level="info",
         )
     )
