@@ -1,4 +1,4 @@
-from __future__ import annotations
+scripts\start-ngrok-mcp.ps1 -Port 3337from __future__ import annotations
 
 import json
 import logging
