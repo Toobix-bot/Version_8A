@@ -10,6 +10,16 @@ if echo_bridge_dir not in sys.path:
     sys.path.insert(0, echo_bridge_dir)
 
 from echo_bridge.mcp_setup import mcp
+# Ensure the main app module is imported so DB initialization (init_db) runs
+# when the MCP server is started standalone. This sets the internal _DB_PATH
+# used by memory_service.get_conn().
+try:
+    # Importing has side-effects: load settings and call init_db(path)
+    import echo_bridge.main  # type: ignore
+except Exception:
+    # If import fails, continue — the MCP server may still work if DB is
+    # initialized elsewhere. We don't want startup to hard-fail here.
+    pass
 
 
 def parse_host_port(argv: list[str]) -> Tuple[str, int]:

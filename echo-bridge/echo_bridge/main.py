@@ -1,4 +1,4 @@
-scripts\start-ngrok-mcp.ps1 -Port 3337from __future__ import annotations
+from __future__ import annotations
 
 import json
 import logging
@@ -99,6 +99,7 @@ class IngestRequest(BaseModel):
     source: str
     title: Optional[str] = None
     texts: list[str]
+    tags: Optional[list[str]] = None
     meta: Optional[dict[str, Any]] = None
 
 
@@ -209,9 +210,27 @@ def health() -> Health:
     return Health(status="ok")
 
 
+@app.get("/healthz")
+def healthz() -> dict[str, str]:
+    return {"status": "ok"}
+
+
 @app.post("/ingest/text", response_model=IngestResponse, dependencies=[Depends(get_api_key)])
 def ingest_text(req: IngestRequest) -> IngestResponse:
-    added = add_chunks(req.source, req.title, req.texts, req.meta)
+    meta = req.meta or {}
+    if req.tags:
+        meta["tags"] = req.tags
+    added = add_chunks(req.source, req.title, req.texts, meta)
+    return IngestResponse(added=added)
+
+
+@app.post("/ingest", response_model=IngestResponse, dependencies=[Depends(get_api_key)])
+def ingest(req: IngestRequest) -> IngestResponse:
+    # generic ingest endpoint
+    meta = req.meta or {}
+    if req.tags:
+        meta["tags"] = req.tags
+    added = add_chunks(req.source, req.title, req.texts, meta)
     return IngestResponse(added=added)
 
 
@@ -299,6 +318,17 @@ def ingest_chatgpt(req: ChatGPTIngest) -> IngestResponse:
             texts.append(content)
     added = add_chunks(req.source, req.title, texts, req.meta)
     return IngestResponse(added=added)
+
+
+class GenerateRequest(BaseModel):
+    prompt: str
+    contextIds: Optional[list[int]] = None
+
+
+@app.post("/generate")
+def generate(req: GenerateRequest) -> dict[str, object]:
+    # Dummy response for now
+    return {"response": "Hier kommt später die KI-Antwort", "prompt": req.prompt, "contextIds": req.contextIds}
 
 
 @app.get("/soul/state")

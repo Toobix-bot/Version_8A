@@ -2,6 +2,7 @@ from fastmcp import FastMCP
 
 from .services.memory_service import search as fts_search, get_chunk
 from .services.fs_service import read_file
+from .services.memory_service import add_chunks
 
 mcp = FastMCP("Echo Bridge", auth=None)  # lokal ohne Auth
 
@@ -93,4 +94,33 @@ def list_resources(q: str | None = None):
 def open_resource(id: str):
     # reuse fetch
     return fetch_tool(id)
+
+
+# New helper tools for Project-ECHO playground
+
+
+@mcp.tool(name="echo_search", output_schema={"type": "object"})
+def echo_search_tool(query: str | None = None, k: int = 5):
+    """Search tool exposed as 'echo_search' using (query, k) to match the 'search' tool naming.
+    This avoids an extra nested 'arguments' property in the input schema.
+    """
+    q = query or ""
+    try:
+        k = int(k)
+    except Exception:
+        k = 5
+    hits = fts_search(q, k)
+    results = [{"id": str(h.id), "title": h.title or "", "snippet": h.snippet} for h in hits]
+    return {"results": results}
+
+
+@mcp.tool(name="echo_ingest", output_schema={"type": "object"})
+def echo_ingest_tool(source: str, title: str | None = None, text: str | None = None, tags: list[str] | None = None):
+    """Ingest tool exposed as 'echo_ingest' with explicit signature for source/title/text/tags.
+    Accepts direct fields (source, title, text, tags) so clients don't need to nest under 'arguments'.
+    """
+    texts = [text] if text else []
+    meta = {"tags": tags} if tags else {}
+    added = add_chunks(source, title, texts, meta)
+    return {"added": added}
 

@@ -41,9 +41,35 @@ def add_chunks(source: str, title: str | None, texts: list[str], meta: dict[str,
             "INSERT INTO chunks(doc_source, doc_title, text, meta_json) VALUES (?,?,?,?)",
             (source, title, t, meta_json),
         )
+        rowid = cur.lastrowid
         count += 1
+        # if meta contains tags, persist them
+        if meta and isinstance(meta.get("tags"), (list, tuple)):
+            tags = meta.get("tags")
+            for tag in tags:
+                # insert or ignore tag
+                cur.execute("INSERT OR IGNORE INTO tags(name) VALUES (?)", (tag,))
+                # get tag id
+                cur.execute("SELECT id FROM tags WHERE name=?", (tag,))
+                tr = cur.fetchone()
+                if tr:
+                    tag_id = tr[0]
+                    cur.execute(
+                        "INSERT OR IGNORE INTO chunk_tags(chunk_id, tag_id) VALUES (?,?)",
+                        (rowid, tag_id),
+                    )
     conn.commit()
     return count
+
+
+def get_tags_for_chunk(chunk_id: int) -> list[str]:
+    conn = get_conn()
+    cur = conn.cursor()
+    cur.execute(
+        "SELECT t.name FROM tags t JOIN chunk_tags ct ON ct.tag_id=t.id WHERE ct.chunk_id=?",
+        (chunk_id,),
+    )
+    return [r[0] for r in cur.fetchall()]
 
 
 def _sanitize_query(q: str) -> str:
