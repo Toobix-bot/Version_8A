@@ -1,0 +1,14 @@
+﻿{
+    "schema_version":  "v1",
+    "name_for_human":  "ECHO Generate",
+    "name_for_model":  "echo_generate",
+    "description_for_human":  "Generate narrated scenes via the ECHO bridge (RAG-enabled).",
+    "description_for_model":  "Use this tool to generate text given a prompt and optional contextIds.",
+    "auth":  {
+                 "type":  "none"
+             },
+    "api":  {
+                "type":  "openapi",
+                "url":  "https://multiplicative-unapprehendably-marisha.ngrok-free.dev/mcp/openapi.json"
+            }
+}

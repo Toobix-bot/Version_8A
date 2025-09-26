@@ -1,0 +1,40 @@
+name: smoke-test
+
+on:
+  push:
+    paths:
+      - 'echo-bridge/**'
+  pull_request:
+    paths:
+      - 'echo-bridge/**'
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Install deps
+        run: |
+          python -m venv .venv
+          . .venv/bin/activate
+          pip install --upgrade pip
+          pip install fastapi uvicorn httpx
+      - name: Start MCP
+        run: |
+          . .venv/bin/activate
+          python run_mcp_http.py --host 127.0.0.1 --port 3337 &
+          sleep 2
+      - name: Start Bridge
+        run: |
+          . .venv/bin/activate
+          export API_KEY=ci-test-key
+          python -m uvicorn echo_bridge.main:app --host 127.0.0.1 --port 3333 &
+          sleep 3
+      - name: Run smoke script
+        run: |
+          . .venv/bin/activate
+          python scripts/echo_generate_smoke.py --bridge-key ci-test-key

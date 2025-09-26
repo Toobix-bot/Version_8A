@@ -66,3 +66,20 @@ Traceback (most recent call last):
   File "c:\GPT\Version_8\echo-bridge\.venv\Lib\site-packages\anyio\streams\memory.py", line 93, in receive_nowait
     raise ClosedResourceError
 anyio.ClosedResourceError
+INFO:     127.0.0.1:56315 - "POST /mcp HTTP/1.1" 406 Not Acceptable
+ERROR:mcp.server.streamable_http:Error in message router
+Traceback (most recent call last):
+  File "c:\GPT\Version_8\echo-bridge\.venv\Lib\site-packages\mcp\server\streamable_http.py", line 831, in message_router
+    async for session_message in write_stream_reader:
+    ...<46 lines>...
+            )
+  File "c:\GPT\Version_8\echo-bridge\.venv\Lib\site-packages\anyio\abc\_streams.py", line 41, in __anext__
+    return await self.receive()
+           ^^^^^^^^^^^^^^^^^^^^
+  File "c:\GPT\Version_8\echo-bridge\.venv\Lib\site-packages\anyio\streams\memory.py", line 111, in receive
+    return self.receive_nowait()
+           ~~~~~~~~~~~~~~~~~~~^^
+  File "c:\GPT\Version_8\echo-bridge\.venv\Lib\site-packages\anyio\streams\memory.py", line 93, in receive_nowait
+    raise ClosedResourceError
+anyio.ClosedResourceError
+INFO:     127.0.0.1:56352 - "POST /mcp HTTP/1.1" 200 OK

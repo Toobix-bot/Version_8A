@@ -185,12 +185,80 @@ def main() -> None:
     # Mount existing tools/resources/prompts without a prefix
     server.mount(mcp)
 
+    # If running as an HTTP server, expose a small OpenAPI JSON endpoint
+    # so that the mounted MCP app responds to /openapi.json when mounted
+    try:
+        # Build a Starlette/FastAPI app from the server and attach a route
+        star_app = server.http_app(path="/", stateless_http=True)
+
+        # Define a simple ASGI handler for openapi.json
+        async def openapi_handler(scope, receive, send):
+            # Lazy import to avoid circular imports at module load
+            try:
+                from .main import _build_dynamic_openapi_spec
+                spec = _build_dynamic_openapi_spec()
+                body = json.dumps(spec).encode("utf-8")
+                headers = [(b"content-type", b"application/json")]
+                await send({"type": "http.response.start", "status": 200, "headers": headers})
+                await send({"type": "http.response.body", "body": body})
+            except Exception as e:
+                body = ("{\"error\": \"%s\"}" % str(e)).encode("utf-8")
+                headers = [(b"content-type", b"application/json")]
+                await send({"type": "http.response.start", "status": 500, "headers": headers})
+                await send({"type": "http.response.body", "body": body})
+
+        # Mount the ASGI handler at /openapi.json inside the MCP app
+        try:
+            # Starlette app supports mount route configuration
+            star_app.add_route("/openapi.json", openapi_handler, methods=["GET"])
+        except Exception:
+            # Fallback: set directly in routes
+            from starlette.routing import Route
+
+            star_app.router.routes.append(Route("/openapi.json", openapi_handler, methods=["GET"]))
+    except Exception:
+        # If anything goes wrong here, continue - the app will run without this endpoint
+        pass
+
     if args.transport == "stdio":
         server.run(transport="stdio")
     elif args.transport == "sse":
         server.run(transport="sse", host=args.host, port=args.port)
     else:
-        server.run(transport="http", host=args.host, port=args.port, path=args.path)
+        # Build a Starlette app and attach openapi.json handler, then run using uvicorn
+        try:
+            star_app = server.http_app(path=args.path or "/", stateless_http=True)
+
+            # attach openapi route
+            from .main import _build_dynamic_openapi_spec
+
+            async def openapi_asgi(scope, receive, send):
+                try:
+                    spec = _build_dynamic_openapi_spec()
+                    body = json.dumps(spec).encode("utf-8")
+                    headers = [(b"content-type", b"application/json")]
+                    await send({"type": "http.response.start", "status": 200, "headers": headers})
+                    await send({"type": "http.response.body", "body": body})
+                except Exception as e:
+                    body = ("{\"error\": \"%s\"}" % str(e)).encode("utf-8")
+                    headers = [(b"content-type", b"application/json")]
+                    await send({"type": "http.response.start", "status": 500, "headers": headers})
+                    await send({"type": "http.response.body", "body": body})
+
+            try:
+                star_app.add_route("/openapi.json", openapi_asgi, methods=["GET"])
+            except Exception:
+                from starlette.routing import Route
+
+                star_app.router.routes.append(Route("/openapi.json", openapi_asgi, methods=["GET"]))
+
+            # Run via uvicorn programmatically
+            import uvicorn
+
+            uvicorn.run(star_app, host=args.host, port=args.port)
+        except Exception:
+            # Fallback to fastmcp runner if the above fails
+            server.run(transport="http", host=args.host, port=args.port, path=args.path)
 
 
 if __name__ == "__main__":

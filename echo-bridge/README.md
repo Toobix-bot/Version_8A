@@ -1,3 +1,33 @@
+Echo-Bridge — quick start (Windows)
+
+This small README gives the exact commands I used to run MCP and the Bridge on Windows for local development.
+
+Prereqs
+- Python 3.11+ and a virtualenv created in `echo-bridge/.venv`
+- From repo root: `cd echo-bridge` and create venv if needed.
+
+Start MCP (background)
+```powershell
+# from repo root
+$log = 'C:\GPT\Version_8\mcp_server.log'
+if (Test-Path $log) { Remove-Item $log -Force }
+Start-Process -FilePath '.\.venv\Scripts\python.exe' -ArgumentList 'run_mcp_http.py','--host','127.0.0.1','--port','3337' -WorkingDirectory (Join-Path (Get-Location) 'echo-bridge') -RedirectStandardOutput $log -RedirectStandardError $log -NoNewWindow
+```
+
+Start Bridge (background) — with API key
+```powershell
+# set API key and start bridge (background)
+Start-Process -FilePath 'echo-bridge\scripts\start_bridge_cmd_wrapper.bat' -ArgumentList 'test-secret-123','127.0.0.1','3333' -WorkingDirectory (Join-Path (Get-Location) 'echo-bridge') -NoNewWindow
+```
+
+Run smoke test
+```powershell
+echo-bridge\.venv\Scripts\python.exe echo-bridge\scripts\echo_generate_smoke.py --bridge-key test-secret-123
+```
+
+Notes
+- If you start the Bridge without setting `API_KEY`, the endpoint will not require X-API-Key.
+- The smoke script now accepts `--bridge-key` or reads `BRIDGE_KEY` / `API_KEY` from the environment.
 # ECHO-BRIDGE (MVP)
 
 Local bridge for context and controlled actions. FastAPI + SQLite FTS5. Binds 127.0.0.1 only.

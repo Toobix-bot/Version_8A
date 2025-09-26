@@ -11,7 +11,7 @@ import yaml
 from fastapi import Depends, FastAPI, Header, HTTPException, Query, Body
 from fastapi import Request
 from starlette.responses import Response
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 try:
@@ -174,19 +174,42 @@ app.mount(
 )
 
 # Mount MCP under /mcp
+mounted = False
 if mount_mcp:
-    # Preferred helper if available
-    try:
-        mount_mcp(app, mcp_server, path="/mcp")
-    except Exception:
-        pass
-else:
-    # Fallback: create FastMCP ASGI app and mount directly (stateless for embedding)
+    # Some versions of fastmcp.fastapi.mount_mcp mount directly at /mcp which
+    # shadows routes in this main app (like /mcp/openapi.json). To avoid that
+    # unpredictable behavior we skip the helper and always use the http_app
+    # approach below which mounts the MCP under /mcp_app and leaves /mcp/* for
+    # the main bridge to serve (notably /mcp/openapi.json).
+    logger.info("fastmcp.fastapi.mount_mcp available but intentionally skipped to preserve /mcp routes")
+
+# Create FastMCP ASGI app and mount it under /mcp_app (stateless for embedding)
+if not mounted:
     try:
         sub_app = mcp_server.http_app(path="/", stateless_http=True)
-        app.mount("/mcp", sub_app, name="mcp")
-    except Exception:
-        pass
+        # Wrap the MCP sub_app so we can serve a dynamic /openapi.json from the mounted app
+        try:
+            wrapper = FastAPI()
+
+            @wrapper.get("/openapi.json")
+            def mcp_openapi_inside() -> JSONResponse:
+                try:
+                    spec = _build_dynamic_openapi_spec()
+                    return JSONResponse(content=spec)
+                except Exception as e:
+                    raise HTTPException(status_code=500, detail=f"Failed to build dynamic openapi: {e}")
+
+            # Mount the MCP http_app under the wrapper at root, then expose it
+            # at /mcp_app so the main application keeps ownership of /mcp/*
+            wrapper.mount("/", sub_app)
+            app.mount("/mcp_app", wrapper, name="mcp")
+            logger.info("mounted MCP http_app under /mcp_app (wrapper provides /openapi.json)")
+        except Exception:
+            # Fallback to direct mount if wrapper fails
+            app.mount("/mcp_app", sub_app, name="mcp")
+            logger.info("mounted MCP http_app under /mcp_app (direct mount)")
+    except Exception as e:
+        logger.error(f"failed to mount mcp http_app fallback: {e}")
 
 
 @app.middleware("http")
@@ -389,3 +412,123 @@ def index_page() -> HTMLResponse:
     if index_path.exists():
         return HTMLResponse(index_path.read_text(encoding="utf-8"))
     return HTMLResponse("<h1>ECHO-BRIDGE</h1><p>Minimal UI not found.</p>")
+
+
+# Serve a static OpenAPI spec for ChatGPT/Developer-Mode registration.
+@app.get("/mcp/openapi.json")
+def mcp_openapi() -> JSONResponse:
+    public_dir = Path(__file__).resolve().parent.parent / "public"
+    openapi_path = public_dir / "mcp_openapi.json"
+    # Prefer an explicit static file for stability
+    if openapi_path.exists():
+        try:
+            data = json.loads(openapi_path.read_text(encoding="utf-8"))
+            return JSONResponse(content=data)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Failed to load openapi spec: {e}")
+
+    # Fallback: attempt to build a minimal OpenAPI spec dynamically from the FastMCP server
+    try:
+        tools = []
+        # Try several common attribute names used by FastMCP to keep compatibility
+        for attr in ("tools", "_tools", "registered_tools", "_registry"):
+            candidate = getattr(mcp_server, attr, None)
+            if candidate:
+                if isinstance(candidate, dict):
+                    tools = list(candidate.keys())
+                elif isinstance(candidate, (list, tuple)):
+                    # items may be objects with a 'name' attribute
+                    names = []
+                    for it in candidate:
+                        n = getattr(it, "name", None) or getattr(it, "__name__", None)
+                        if n:
+                            names.append(n)
+                    tools = names
+                break
+
+        # Build a simple OpenAPI spec exposing the internal /generate and the bridge proxy endpoints
+        spec = {
+            "openapi": "3.0.1",
+            "info": {"title": "ECHO Bridge MCP (dynamic)", "version": "0.1.0"},
+            "paths": {},
+        }
+
+        # Internal generate
+        spec["paths"]["/generate"] = {
+            "post": {
+                "summary": "Generate text (internal)",
+                "requestBody": {"content": {"application/json": {"schema": {"type": "object"}}}},
+                "responses": {"200": {"description": "OK"}},
+            }
+        }
+
+        # Bridge proxy for echo_generate
+        spec["paths"]["/bridge/link_echo_generate/echo_generate"] = {
+            "post": {
+                "summary": "Bridge proxy for echo_generate tool",
+                "requestBody": {"content": {"application/json": {"schema": {"type": "object"}}}},
+                "responses": {"200": {"description": "OK"}},
+            }
+        }
+
+        # Add discovered tools as an extension to help tooling discover capabilities
+        if tools:
+            spec["x-mcp-tools"] = tools
+
+        return JSONResponse(content=spec)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to build dynamic openapi spec: {e}")
+
+
+def _build_dynamic_openapi_spec() -> dict:
+    """Attempt to build a minimal OpenAPI spec from the FastMCP server tools."""
+    tools = []
+    for attr in ("tools", "_tools", "registered_tools", "_registry"):
+        candidate = getattr(mcp_server, attr, None)
+        if candidate:
+            if isinstance(candidate, dict):
+                tools = list(candidate.keys())
+            elif isinstance(candidate, (list, tuple)):
+                names = []
+                for it in candidate:
+                    n = getattr(it, "name", None) or getattr(it, "__name__", None)
+                    if n:
+                        names.append(n)
+                tools = names
+            break
+
+    spec = {
+        "openapi": "3.0.1",
+        "info": {"title": "ECHO Bridge MCP (dynamic)", "version": "0.1.0"},
+        "paths": {},
+    }
+
+    spec["paths"]["/generate"] = {
+        "post": {
+            "summary": "Generate text (internal)",
+            "requestBody": {"content": {"application/json": {"schema": {"type": "object"}}}},
+            "responses": {"200": {"description": "OK"}},
+        }
+    }
+
+    spec["paths"]["/bridge/link_echo_generate/echo_generate"] = {
+        "post": {
+            "summary": "Bridge proxy for echo_generate tool",
+            "requestBody": {"content": {"application/json": {"schema": {"type": "object"}}}},
+            "responses": {"200": {"description": "OK"}},
+        }
+    }
+
+    if tools:
+        spec["x-mcp-tools"] = tools
+
+    return spec
+
+
+@app.get("/mcp_openapi_dynamic.json")
+def mcp_openapi_dynamic() -> JSONResponse:
+    try:
+        spec = _build_dynamic_openapi_spec()
+        return JSONResponse(content=spec)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to build dynamic openapi spec: {e}")

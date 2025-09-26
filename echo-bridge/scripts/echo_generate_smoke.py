@@ -1,5 +1,5 @@
 """
-Run from repo root: python echo-bridge\scripts\echo_generate_smoke.py
+Run from repo root: python echo-bridge/scripts/echo_generate_smoke.py
 This script calls the local MCP endpoint and the Bridge. It accepts a --bridge-key
 CLI flag or BRIDGE_KEY/API_KEY environment variable to pass as X-API-Key when calling the Bridge.
 """
@@ -21,12 +21,16 @@ BRIDGE_URL = "http://127.0.0.1:3333/bridge/link_echo_generate/echo_generate"
 def call_mcp(prompt: str) -> None:
     payload = {"jsonrpc": "2.0", "id": "g1", "method": "tools/call", "params": {"name": "echo_generate", "arguments": {"prompt": prompt}}}
     print("Calling MCP...")
-    with httpx.stream("POST", MCP_URL, json=payload, headers={"Content-Type": "application/json", "Accept": "text/event-stream"}, timeout=15.0) as r:
+    with httpx.stream("POST", MCP_URL, json=payload, headers={"Content-Type": "application/json", "Accept": "application/json, text/event-stream"}, timeout=15.0) as r:
         print("MCP STATUS", r.status_code)
         for line in r.iter_lines():
             if not line:
                 continue
-            text = line.decode("utf-8", errors="ignore").strip()
+            # httpx.iter_lines may yield bytes or str depending on version/config.
+            if isinstance(line, bytes):
+                text = line.decode("utf-8", errors="ignore").strip()
+            else:
+                text = line.strip()
             print(text)
 
 

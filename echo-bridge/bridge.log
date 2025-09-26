@@ -12,3 +12,605 @@ INFO:     127.0.0.1:55629 - "POST /bridge/link_echo_generate/echo_generate HTTP/
 INFO:     127.0.0.1:55668 - "POST /bridge/link_echo_generate/echo_generate HTTP/1.1" 401 Unauthorized
 {"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/bridge/link_echo_generate/echo_generate", "method": "POST", "duration_ms": 15, "outcome": "success"}
 INFO:     127.0.0.1:55752 - "POST /bridge/link_echo_generate/echo_generate HTTP/1.1" 200 OK
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/bridge/link_echo_generate/echo_generate", "method": "POST", "duration_ms": 69, "outcome": "success"}
+INFO:     127.0.0.1:56316 - "POST /bridge/link_echo_generate/echo_generate HTTP/1.1" 200 OK
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/bridge/link_echo_generate/echo_generate", "method": "POST", "duration_ms": 85, "outcome": "success"}
+INFO:     127.0.0.1:56363 - "POST /bridge/link_echo_generate/echo_generate HTTP/1.1" 200 OK
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp", "method": "POST", "duration_ms": 52, "outcome": "success"}
+INFO:     4.234.83.109:0 - "POST /mcp HTTP/1.1" 307 Temporary Redirect
+[09/26/25 21:33:55] ERROR    Original RuntimeError from mcp library: http.py:40
+                             Task group is not initialized. Make               
+                             sure to use run().                                
+                             +- Traceback (most recent call last) -+           
+                             | C:\GPT\Version_8\echo-bridge\.venv\ |           
+                             | Lib\site-packages\fastmcp\server\ht |           
+                             | tp.py:37 in __call__                |           
+                             |                                     |           
+                             |    34                               |           
+                             |    35     async def __call__(self,  |           
+                             |    36         try:                  |           
+                             | >  37             await self.sessio |           
+                             |    38         except RuntimeError a |           
+                             |    39             if str(e) == "Tas |           
+                             |    40                 logger.error( |           
+                             |                                     |           
+                             | C:\GPT\Version_8\echo-bridge\.venv\ |           
+                             | Lib\site-packages\mcp\server\stream |           
+                             | able_http_manager.py:138 in         |           
+                             | handle_request                      |           
+                             |                                     |           
+                             |   135             send: ASGI send f |           
+                             |   136         """                   |           
+                             |   137         if self._task_group i |           
+                             | > 138             raise RuntimeErro |           
+                             |   139                               |           
+                             |   140         # Dispatch to the app |           
+                             |   141         if self.stateless:    |           
+                             +-------------------------------------+           
+                             RuntimeError: Task group is not                   
+                             initialized. Make sure to use run().              
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp/", "method": "POST", "duration_ms": 410, "outcome": "error"}
+INFO:     4.234.83.109:0 - "POST /mcp/ HTTP/1.1" 500 Internal Server Error
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp", "method": "GET", "duration_ms": 0, "outcome": "success"}
+INFO:     4.234.83.104:0 - "GET /mcp HTTP/1.1" 307 Temporary Redirect
+[09/26/25 21:33:56] ERROR    Original RuntimeError from mcp library: http.py:40
+                             Task group is not initialized. Make               
+                             sure to use run().                                
+                             +- Traceback (most recent call last) -+           
+                             | C:\GPT\Version_8\echo-bridge\.venv\ |           
+                             | Lib\site-packages\fastmcp\server\ht |           
+                             | tp.py:37 in __call__                |           
+                             |                                     |           
+                             |    34                               |           
+                             |    35     async def __call__(self,  |           
+                             |    36         try:                  |           
+                             | >  37             await self.sessio |           
+                             |    38         except RuntimeError a |           
+                             |    39             if str(e) == "Tas |           
+                             |    40                 logger.error( |           
+                             |                                     |           
+                             | C:\GPT\Version_8\echo-bridge\.venv\ |           
+                             | Lib\site-packages\mcp\server\stream |           
+                             | able_http_manager.py:138 in         |           
+                             | handle_request                      |           
+                             |                                     |           
+                             |   135             send: ASGI send f |           
+                             |   136         """                   |           
+                             |   137         if self._task_group i |           
+                             | > 138             raise RuntimeErro |           
+                             |   139                               |           
+                             |   140         # Dispatch to the app |           
+                             |   141         if self.stateless:    |           
+                             +-------------------------------------+           
+                             RuntimeError: Task group is not                   
+                             initialized. Make sure to use run().              
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp/", "method": "GET", "duration_ms": 18, "outcome": "error"}
+INFO:     4.234.83.104:0 - "GET /mcp/ HTTP/1.1" 500 Internal Server Error
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp", "method": "GET", "duration_ms": 5, "outcome": "success"}
+INFO:     2a02:3036:20b:1e2e:c50c:635a:1c02:cd78:0 - "GET /mcp HTTP/1.1" 307 Temporary Redirect
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp/openapi.json", "method": "GET", "duration_ms": 13, "outcome": "error"}
+INFO:     2a02:3036:20b:1e2e:c50c:635a:1c02:cd78:0 - "GET /mcp/openapi.json HTTP/1.1" 404 Not Found
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/public/chatgpt_tool_manifest.json", "method": "GET", "duration_ms": 148, "outcome": "success"}
+INFO:     2a02:3036:20b:1e2e:c50c:635a:1c02:cd78:0 - "GET /public/chatgpt_tool_manifest.json HTTP/1.1" 200 OK
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/public/chatgpt_tool_manifest.json", "method": "GET", "duration_ms": 1, "outcome": "success"}
+INFO:     2a02:3036:20b:1e2e:c50c:635a:1c02:cd78:0 - "GET /public/chatgpt_tool_manifest.json HTTP/1.1" 200 OK
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp", "method": "GET", "duration_ms": 171, "outcome": "success"}
+INFO:     2a02:3036:20b:1e2e:c50c:635a:1c02:cd78:0 - "GET /mcp HTTP/1.1" 307 Temporary Redirect
+[09/26/25 21:36:44] ERROR    Original RuntimeError from mcp library: http.py:40
+                             Task group is not initialized. Make               
+                             sure to use run().                                
+                             +- Traceback (most recent call last) -+           
+                             | C:\GPT\Version_8\echo-bridge\.venv\ |           
+                             | Lib\site-packages\fastmcp\server\ht |           
+                             | tp.py:37 in __call__                |           
+                             |                                     |           
+                             |    34                               |           
+                             |    35     async def __call__(self,  |           
+                             |    36         try:                  |           
+                             | >  37             await self.sessio |           
+                             |    38         except RuntimeError a |           
+                             |    39             if str(e) == "Tas |           
+                             |    40                 logger.error( |           
+                             |                                     |           
+                             | C:\GPT\Version_8\echo-bridge\.venv\ |           
+                             | Lib\site-packages\mcp\server\stream |           
+                             | able_http_manager.py:138 in         |           
+                             | handle_request                      |           
+                             |                                     |           
+                             |   135             send: ASGI send f |           
+                             |   136         """                   |           
+                             |   137         if self._task_group i |           
+                             | > 138             raise RuntimeErro |           
+                             |   139                               |           
+                             |   140         # Dispatch to the app |           
+                             |   141         if self.stateless:    |           
+                             +-------------------------------------+           
+                             RuntimeError: Task group is not                   
+                             initialized. Make sure to use run().              
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp/", "method": "GET", "duration_ms": 1677, "outcome": "error"}
+INFO:     2a02:3036:20b:1e2e:c50c:635a:1c02:cd78:0 - "GET /mcp/ HTTP/1.1" 500 Internal Server Error
+[09/26/25 21:36:45] ERROR    Original RuntimeError from mcp library: http.py:40
+                             Task group is not initialized. Make               
+                             sure to use run().                                
+                             +- Traceback (most recent call last) -+           
+                             | C:\GPT\Version_8\echo-bridge\.venv\ |           
+                             | Lib\site-packages\fastmcp\server\ht |           
+                             | tp.py:37 in __call__                |           
+                             |                                     |           
+                             |    34                               |           
+                             |    35     async def __call__(self,  |           
+                             |    36         try:                  |           
+                             | >  37             await self.sessio |           
+                             |    38         except RuntimeError a |           
+                             |    39             if str(e) == "Tas |           
+                             |    40                 logger.error( |           
+                             |                                     |           
+                             | C:\GPT\Version_8\echo-bridge\.venv\ |           
+                             | Lib\site-packages\mcp\server\stream |           
+                             | able_http_manager.py:138 in         |           
+                             | handle_request                      |           
+                             |                                     |           
+                             |   135             send: ASGI send f |           
+                             |   136         """                   |           
+                             |   137         if self._task_group i |           
+                             | > 138             raise RuntimeErro |           
+                             |   139                               |           
+                             |   140         # Dispatch to the app |           
+                             |   141         if self.stateless:    |           
+                             +-------------------------------------+           
+                             RuntimeError: Task group is not                   
+                             initialized. Make sure to use run().              
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp/", "method": "GET", "duration_ms": 16, "outcome": "error"}
+INFO:     2a02:3036:20b:1e2e:c50c:635a:1c02:cd78:0 - "GET /mcp/ HTTP/1.1" 500 Internal Server Error
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp/openapi.json", "method": "GET", "duration_ms": 7, "outcome": "error"}
+INFO:     2a02:3036:20b:1e2e:c50c:635a:1c02:cd78:0 - "GET /mcp/openapi.json HTTP/1.1" 404 Not Found
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp/openapi.json/", "method": "GET", "duration_ms": 0, "outcome": "error"}
+INFO:     2a02:3036:20b:1e2e:c50c:635a:1c02:cd78:0 - "GET /mcp/openapi.json/ HTTP/1.1" 404 Not Found
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/public/chatgpt_tool_manifest.json", "method": "GET", "duration_ms": 11, "outcome": "success"}
+INFO:     2a02:3036:20b:1e2e:c50c:635a:1c02:cd78:0 - "GET /public/chatgpt_tool_manifest.json HTTP/1.1" 200 OK
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp", "method": "POST", "duration_ms": 8, "outcome": "success"}
+INFO:     4.234.83.99:0 - "POST /mcp HTTP/1.1" 307 Temporary Redirect
+[09/26/25 21:42:46] ERROR    Original RuntimeError from mcp library: http.py:40
+                             Task group is not initialized. Make               
+                             sure to use run().                                
+                             +- Traceback (most recent call last) -+           
+                             | C:\GPT\Version_8\echo-bridge\.venv\ |           
+                             | Lib\site-packages\fastmcp\server\ht |           
+                             | tp.py:37 in __call__                |           
+                             |                                     |           
+                             |    34                               |           
+                             |    35     async def __call__(self,  |           
+                             |    36         try:                  |           
+                             | >  37             await self.sessio |           
+                             |    38         except RuntimeError a |           
+                             |    39             if str(e) == "Tas |           
+                             |    40                 logger.error( |           
+                             |                                     |           
+                             | C:\GPT\Version_8\echo-bridge\.venv\ |           
+                             | Lib\site-packages\mcp\server\stream |           
+                             | able_http_manager.py:138 in         |           
+                             | handle_request                      |           
+                             |                                     |           
+                             |   135             send: ASGI send f |           
+                             |   136         """                   |           
+                             |   137         if self._task_group i |           
+                             | > 138             raise RuntimeErro |           
+                             |   139                               |           
+                             |   140         # Dispatch to the app |           
+                             |   141         if self.stateless:    |           
+                             +-------------------------------------+           
+                             RuntimeError: Task group is not                   
+                             initialized. Make sure to use run().              
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp/", "method": "POST", "duration_ms": 103, "outcome": "error"}
+INFO:     4.234.83.99:0 - "POST /mcp/ HTTP/1.1" 500 Internal Server Error
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp", "method": "GET", "duration_ms": 0, "outcome": "success"}
+INFO:     4.234.83.104:0 - "GET /mcp HTTP/1.1" 307 Temporary Redirect
+                    ERROR    Original RuntimeError from mcp library: http.py:40
+                             Task group is not initialized. Make               
+                             sure to use run().                                
+                             +- Traceback (most recent call last) -+           
+                             | C:\GPT\Version_8\echo-bridge\.venv\ |           
+                             | Lib\site-packages\fastmcp\server\ht |           
+                             | tp.py:37 in __call__                |           
+                             |                                     |           
+                             |    34                               |           
+                             |    35     async def __call__(self,  |           
+                             |    36         try:                  |           
+                             | >  37             await self.sessio |           
+                             |    38         except RuntimeError a |           
+                             |    39             if str(e) == "Tas |           
+                             |    40                 logger.error( |           
+                             |                                     |           
+                             | C:\GPT\Version_8\echo-bridge\.venv\ |           
+                             | Lib\site-packages\mcp\server\stream |           
+                             | able_http_manager.py:138 in         |           
+                             | handle_request                      |           
+                             |                                     |           
+                             |   135             send: ASGI send f |           
+                             |   136         """                   |           
+                             |   137         if self._task_group i |           
+                             | > 138             raise RuntimeErro |           
+                             |   139                               |           
+                             |   140         # Dispatch to the app |           
+                             |   141         if self.stateless:    |           
+                             +-------------------------------------+           
+                             RuntimeError: Task group is not                   
+                             initialized. Make sure to use run().              
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp/", "method": "GET", "duration_ms": 29, "outcome": "error"}
+INFO:     4.234.83.104:0 - "GET /mcp/ HTTP/1.1" 500 Internal Server Error
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp", "method": "GET", "duration_ms": 10, "outcome": "success"}
+INFO:     127.0.0.1:57898 - "GET /mcp HTTP/1.1" 307 Temporary Redirect
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp/openapi.json", "method": "GET", "duration_ms": 23, "outcome": "error"}
+INFO:     127.0.0.1:57899 - "GET /mcp/openapi.json HTTP/1.1" 404 Not Found
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/public/chatgpt_tool_manifest.json", "method": "GET", "duration_ms": 9, "outcome": "success"}
+INFO:     127.0.0.1:57901 - "GET /public/chatgpt_tool_manifest.json HTTP/1.1" 200 OK
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/health", "method": "GET", "duration_ms": 32, "outcome": "success"}
+INFO:     127.0.0.1:57903 - "GET /health HTTP/1.1" 200 OK
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp", "method": "POST", "duration_ms": 53, "outcome": "success"}
+INFO:     4.234.83.98:0 - "POST /mcp HTTP/1.1" 307 Temporary Redirect
+[09/26/25 21:45:12] ERROR    Original RuntimeError from mcp library: http.py:40
+                             Task group is not initialized. Make               
+                             sure to use run().                                
+                             +- Traceback (most recent call last) -+           
+                             | C:\GPT\Version_8\echo-bridge\.venv\ |           
+                             | Lib\site-packages\fastmcp\server\ht |           
+                             | tp.py:37 in __call__                |           
+                             |                                     |           
+                             |    34                               |           
+                             |    35     async def __call__(self,  |           
+                             |    36         try:                  |           
+                             | >  37             await self.sessio |           
+                             |    38         except RuntimeError a |           
+                             |    39             if str(e) == "Tas |           
+                             |    40                 logger.error( |           
+                             |                                     |           
+                             | C:\GPT\Version_8\echo-bridge\.venv\ |           
+                             | Lib\site-packages\mcp\server\stream |           
+                             | able_http_manager.py:138 in         |           
+                             | handle_request                      |           
+                             |                                     |           
+                             |   135             send: ASGI send f |           
+                             |   136         """                   |           
+                             |   137         if self._task_group i |           
+                             | > 138             raise RuntimeErro |           
+                             |   139                               |           
+                             |   140         # Dispatch to the app |           
+                             |   141         if self.stateless:    |           
+                             +-------------------------------------+           
+                             RuntimeError: Task group is not                   
+                             initialized. Make sure to use run().              
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp/", "method": "POST", "duration_ms": 1083, "outcome": "error"}
+INFO:     4.234.83.98:0 - "POST /mcp/ HTTP/1.1" 500 Internal Server Error
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp", "method": "GET", "duration_ms": 0, "outcome": "success"}
+INFO:     4.234.83.110:0 - "GET /mcp HTTP/1.1" 307 Temporary Redirect
+[09/26/25 21:45:14] ERROR    Original RuntimeError from mcp library: http.py:40
+                             Task group is not initialized. Make               
+                             sure to use run().                                
+                             +- Traceback (most recent call last) -+           
+                             | C:\GPT\Version_8\echo-bridge\.venv\ |           
+                             | Lib\site-packages\fastmcp\server\ht |           
+                             | tp.py:37 in __call__                |           
+                             |                                     |           
+                             |    34                               |           
+                             |    35     async def __call__(self,  |           
+                             |    36         try:                  |           
+                             | >  37             await self.sessio |           
+                             |    38         except RuntimeError a |           
+                             |    39             if str(e) == "Tas |           
+                             |    40                 logger.error( |           
+                             |                                     |           
+                             | C:\GPT\Version_8\echo-bridge\.venv\ |           
+                             | Lib\site-packages\mcp\server\stream |           
+                             | able_http_manager.py:138 in         |           
+                             | handle_request                      |           
+                             |                                     |           
+                             |   135             send: ASGI send f |           
+                             |   136         """                   |           
+                             |   137         if self._task_group i |           
+                             | > 138             raise RuntimeErro |           
+                             |   139                               |           
+                             |   140         # Dispatch to the app |           
+                             |   141         if self.stateless:    |           
+                             +-------------------------------------+           
+                             RuntimeError: Task group is not                   
+                             initialized. Make sure to use run().              
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp/", "method": "GET", "duration_ms": 76, "outcome": "error"}
+INFO:     4.234.83.110:0 - "GET /mcp/ HTTP/1.1" 500 Internal Server Error
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp", "method": "POST", "duration_ms": 6, "outcome": "success"}
+INFO:     4.234.83.109:0 - "POST /mcp HTTP/1.1" 307 Temporary Redirect
+[09/26/25 21:46:45] ERROR    Original RuntimeError from mcp library: http.py:40
+                             Task group is not initialized. Make               
+                             sure to use run().                                
+                             +- Traceback (most recent call last) -+           
+                             | C:\GPT\Version_8\echo-bridge\.venv\ |           
+                             | Lib\site-packages\fastmcp\server\ht |           
+                             | tp.py:37 in __call__                |           
+                             |                                     |           
+                             |    34                               |           
+                             |    35     async def __call__(self,  |           
+                             |    36         try:                  |           
+                             | >  37             await self.sessio |           
+                             |    38         except RuntimeError a |           
+                             |    39             if str(e) == "Tas |           
+                             |    40                 logger.error( |           
+                             |                                     |           
+                             | C:\GPT\Version_8\echo-bridge\.venv\ |           
+                             | Lib\site-packages\mcp\server\stream |           
+                             | able_http_manager.py:138 in         |           
+                             | handle_request                      |           
+                             |                                     |           
+                             |   135             send: ASGI send f |           
+                             |   136         """                   |           
+                             |   137         if self._task_group i |           
+                             | > 138             raise RuntimeErro |           
+                             |   139                               |           
+                             |   140         # Dispatch to the app |           
+                             |   141         if self.stateless:    |           
+                             +-------------------------------------+           
+                             RuntimeError: Task group is not                   
+                             initialized. Make sure to use run().              
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp/", "method": "POST", "duration_ms": 71, "outcome": "error"}
+INFO:     4.234.83.109:0 - "POST /mcp/ HTTP/1.1" 500 Internal Server Error
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp", "method": "GET", "duration_ms": 0, "outcome": "success"}
+INFO:     4.234.83.101:0 - "GET /mcp HTTP/1.1" 307 Temporary Redirect
+[09/26/25 21:46:46] ERROR    Original RuntimeError from mcp library: http.py:40
+                             Task group is not initialized. Make               
+                             sure to use run().                                
+                             +- Traceback (most recent call last) -+           
+                             | C:\GPT\Version_8\echo-bridge\.venv\ |           
+                             | Lib\site-packages\fastmcp\server\ht |           
+                             | tp.py:37 in __call__                |           
+                             |                                     |           
+                             |    34                               |           
+                             |    35     async def __call__(self,  |           
+                             |    36         try:                  |           
+                             | >  37             await self.sessio |           
+                             |    38         except RuntimeError a |           
+                             |    39             if str(e) == "Tas |           
+                             |    40                 logger.error( |           
+                             |                                     |           
+                             | C:\GPT\Version_8\echo-bridge\.venv\ |           
+                             | Lib\site-packages\mcp\server\stream |           
+                             | able_http_manager.py:138 in         |           
+                             | handle_request                      |           
+                             |                                     |           
+                             |   135             send: ASGI send f |           
+                             |   136         """                   |           
+                             |   137         if self._task_group i |           
+                             | > 138             raise RuntimeErro |           
+                             |   139                               |           
+                             |   140         # Dispatch to the app |           
+                             |   141         if self.stateless:    |           
+                             +-------------------------------------+           
+                             RuntimeError: Task group is not                   
+                             initialized. Make sure to use run().              
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp/", "method": "GET", "duration_ms": 74, "outcome": "error"}
+INFO:     4.234.83.101:0 - "GET /mcp/ HTTP/1.1" 500 Internal Server Error
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp/openapi.json", "method": "GET", "duration_ms": 22, "outcome": "error"}
+INFO:     127.0.0.1:58112 - "GET /mcp/openapi.json HTTP/1.1" 404 Not Found
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp", "method": "GET", "duration_ms": 0, "outcome": "success"}
+INFO:     127.0.0.1:58113 - "GET /mcp HTTP/1.1" 307 Temporary Redirect
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/public/chatgpt_tool_manifest.json", "method": "GET", "duration_ms": 139, "outcome": "success"}
+INFO:     127.0.0.1:58114 - "GET /public/chatgpt_tool_manifest.json HTTP/1.1" 200 OK
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/public/mcp_openapi.json", "method": "GET", "duration_ms": 21, "outcome": "success"}
+INFO:     127.0.0.1:59199 - "GET /public/mcp_openapi.json HTTP/1.1" 200 OK
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/public/chatgpt_tool_manifest.json", "method": "GET", "duration_ms": 20, "outcome": "success"}
+INFO:     2a02:3036:20b:1e2e:c50c:635a:1c02:cd78:0 - "GET /public/chatgpt_tool_manifest.json HTTP/1.1" 200 OK
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/public/mcp_openapi.json", "method": "GET", "duration_ms": 3, "outcome": "success"}
+INFO:     2a02:3036:20b:1e2e:c50c:635a:1c02:cd78:0 - "GET /public/mcp_openapi.json HTTP/1.1" 200 OK
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp/openapi.json", "method": "GET", "duration_ms": 11, "outcome": "error"}
+INFO:     2a02:3036:20b:1e2e:c50c:635a:1c02:cd78:0 - "GET /mcp/openapi.json HTTP/1.1" 404 Not Found
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/bridge/link_echo_generate/echo_generate", "method": "POST", "duration_ms": 78, "outcome": "success"}
+INFO:     2a02:3036:20b:1e2e:c50c:635a:1c02:cd78:0 - "POST /bridge/link_echo_generate/echo_generate HTTP/1.1" 200 OK
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/bridge/link_echo_generate/echo_generate", "method": "POST", "duration_ms": 14, "outcome": "error"}
+INFO:     2a02:3036:20b:1e2e:c50c:635a:1c02:cd78:0 - "POST /bridge/link_echo_generate/echo_generate HTTP/1.1" 401 Unauthorized
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp/openapi.json", "method": "GET", "duration_ms": 19, "outcome": "error"}
+INFO:     127.0.0.1:61861 - "GET /mcp/openapi.json HTTP/1.1" 404 Not Found
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/public/mcp_openapi.json", "method": "GET", "duration_ms": 9, "outcome": "success"}
+INFO:     127.0.0.1:61862 - "GET /public/mcp_openapi.json HTTP/1.1" 200 OK
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp/openapi.json", "method": "GET", "duration_ms": 1, "outcome": "error"}
+INFO:     2a02:3036:20b:1e2e:c50c:635a:1c02:cd78:0 - "GET /mcp/openapi.json HTTP/1.1" 404 Not Found
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/public/mcp_openapi.json", "method": "GET", "duration_ms": 1, "outcome": "success"}
+INFO:     2a02:3036:20b:1e2e:c50c:635a:1c02:cd78:0 - "GET /public/mcp_openapi.json HTTP/1.1" 200 OK
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp_openapi_dynamic.json", "method": "GET", "duration_ms": 15, "outcome": "error"}
+INFO:     127.0.0.1:62013 - "GET /mcp_openapi_dynamic.json HTTP/1.1" 404 Not Found
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/public/mcp_openapi.json", "method": "GET", "duration_ms": 7, "outcome": "success"}
+INFO:     127.0.0.1:62015 - "GET /public/mcp_openapi.json HTTP/1.1" 200 OK
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp_openapi_dynamic.json", "method": "GET", "duration_ms": 0, "outcome": "error"}
+INFO:     2a02:3036:20b:1e2e:c50c:635a:1c02:cd78:0 - "GET /mcp_openapi_dynamic.json HTTP/1.1" 404 Not Found
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/public/mcp_openapi.json", "method": "GET", "duration_ms": 1, "outcome": "success"}
+INFO:     2a02:3036:20b:1e2e:c50c:635a:1c02:cd78:0 - "GET /public/mcp_openapi.json HTTP/1.1" 200 OK
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/public/chatgpt_tool_manifest.json", "method": "GET", "duration_ms": 2, "outcome": "success"}
+INFO:     2a02:3036:20b:1e2e:c50c:635a:1c02:cd78:0 - "GET /public/chatgpt_tool_manifest.json HTTP/1.1" 200 OK
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp", "method": "POST", "duration_ms": 77, "outcome": "success"}
+INFO:     4.234.83.96:0 - "POST /mcp HTTP/1.1" 307 Temporary Redirect
+[09/26/25 22:14:02] ERROR    Original RuntimeError from mcp library: http.py:40
+                             Task group is not initialized. Make               
+                             sure to use run().                                
+                             +- Traceback (most recent call last) -+           
+                             | C:\GPT\Version_8\echo-bridge\.venv\ |           
+                             | Lib\site-packages\fastmcp\server\ht |           
+                             | tp.py:37 in __call__                |           
+                             |                                     |           
+                             |    34                               |           
+                             |    35     async def __call__(self,  |           
+                             |    36         try:                  |           
+                             | >  37             await self.sessio |           
+                             |    38         except RuntimeError a |           
+                             |    39             if str(e) == "Tas |           
+                             |    40                 logger.error( |           
+                             |                                     |           
+                             | C:\GPT\Version_8\echo-bridge\.venv\ |           
+                             | Lib\site-packages\mcp\server\stream |           
+                             | able_http_manager.py:138 in         |           
+                             | handle_request                      |           
+                             |                                     |           
+                             |   135             send: ASGI send f |           
+                             |   136         """                   |           
+                             |   137         if self._task_group i |           
+                             | > 138             raise RuntimeErro |           
+                             |   139                               |           
+                             |   140         # Dispatch to the app |           
+                             |   141         if self.stateless:    |           
+                             +-------------------------------------+           
+                             RuntimeError: Task group is not                   
+                             initialized. Make sure to use run().              
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp/", "method": "POST", "duration_ms": 159, "outcome": "error"}
+INFO:     4.234.83.96:0 - "POST /mcp/ HTTP/1.1" 500 Internal Server Error
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp", "method": "GET", "duration_ms": 0, "outcome": "success"}
+INFO:     4.234.83.101:0 - "GET /mcp HTTP/1.1" 307 Temporary Redirect
+                    ERROR    Original RuntimeError from mcp library: http.py:40
+                             Task group is not initialized. Make               
+                             sure to use run().                                
+                             +- Traceback (most recent call last) -+           
+                             | C:\GPT\Version_8\echo-bridge\.venv\ |           
+                             | Lib\site-packages\fastmcp\server\ht |           
+                             | tp.py:37 in __call__                |           
+                             |                                     |           
+                             |    34                               |           
+                             |    35     async def __call__(self,  |           
+                             |    36         try:                  |           
+                             | >  37             await self.sessio |           
+                             |    38         except RuntimeError a |           
+                             |    39             if str(e) == "Tas |           
+                             |    40                 logger.error( |           
+                             |                                     |           
+                             | C:\GPT\Version_8\echo-bridge\.venv\ |           
+                             | Lib\site-packages\mcp\server\stream |           
+                             | able_http_manager.py:138 in         |           
+                             | handle_request                      |           
+                             |                                     |           
+                             |   135             send: ASGI send f |           
+                             |   136         """                   |           
+                             |   137         if self._task_group i |           
+                             | > 138             raise RuntimeErro |           
+                             |   139                               |           
+                             |   140         # Dispatch to the app |           
+                             |   141         if self.stateless:    |           
+                             +-------------------------------------+           
+                             RuntimeError: Task group is not                   
+                             initialized. Make sure to use run().              
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp/", "method": "GET", "duration_ms": 19, "outcome": "error"}
+INFO:     4.234.83.101:0 - "GET /mcp/ HTTP/1.1" 500 Internal Server Error
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/public/chatgpt_tool_manifest.json", "method": "GET", "duration_ms": 62, "outcome": "success"}
+INFO:     2a02:3036:20b:1e2e:c50c:635a:1c02:cd78:0 - "GET /public/chatgpt_tool_manifest.json HTTP/1.1" 200 OK
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp/openapi.json", "method": "GET", "duration_ms": 20, "outcome": "error"}
+INFO:     2a02:3036:20b:1e2e:c50c:635a:1c02:cd78:0 - "GET /mcp/openapi.json HTTP/1.1" 404 Not Found
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/bridge/link_echo_generate/echo_generate", "method": "POST", "duration_ms": 108, "outcome": "success"}
+INFO:     2a02:3036:20b:1e2e:c50c:635a:1c02:cd78:0 - "POST /bridge/link_echo_generate/echo_generate HTTP/1.1" 200 OK
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp/openapi.json", "method": "GET", "duration_ms": 8, "outcome": "error"}
+INFO:     127.0.0.1:63046 - "GET /mcp/openapi.json HTTP/1.1" 404 Not Found
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/public/mcp_openapi.json", "method": "GET", "duration_ms": 6, "outcome": "success"}
+INFO:     127.0.0.1:63046 - "GET /public/mcp_openapi.json HTTP/1.1" 200 OK
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp/openapi.json", "method": "GET", "duration_ms": 10, "outcome": "error"}
+INFO:     127.0.0.1:63092 - "GET /mcp/openapi.json HTTP/1.1" 404 Not Found
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/public/mcp_openapi.json", "method": "GET", "duration_ms": 19, "outcome": "success"}
+INFO:     127.0.0.1:63092 - "GET /public/mcp_openapi.json HTTP/1.1" 200 OK
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp/openapi.json", "method": "GET", "duration_ms": 7, "outcome": "error"}
+INFO:     127.0.0.1:63111 - "GET /mcp/openapi.json HTTP/1.1" 404 Not Found
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/public/mcp_openapi.json", "method": "GET", "duration_ms": 4, "outcome": "success"}
+INFO:     127.0.0.1:63111 - "GET /public/mcp_openapi.json HTTP/1.1" 200 OK
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp_openapi_dynamic.json", "method": "GET", "duration_ms": 4, "outcome": "error"}
+INFO:     127.0.0.1:63111 - "GET /mcp_openapi_dynamic.json HTTP/1.1" 404 Not Found
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp/openapi.json", "method": "GET", "duration_ms": 6, "outcome": "error"}
+INFO:     127.0.0.1:63247 - "GET /mcp/openapi.json HTTP/1.1" 404 Not Found
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp_app/openapi.json", "method": "GET", "duration_ms": 0, "outcome": "error"}
+INFO:     127.0.0.1:63247 - "GET /mcp_app/openapi.json HTTP/1.1" 404 Not Found
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/public/mcp_openapi.json", "method": "GET", "duration_ms": 3, "outcome": "success"}
+INFO:     127.0.0.1:63247 - "GET /public/mcp_openapi.json HTTP/1.1" 200 OK
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp/openapi.json", "method": "GET", "duration_ms": 9, "outcome": "error"}
+INFO:     127.0.0.1:63344 - "GET /mcp/openapi.json HTTP/1.1" 404 Not Found
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp_app/openapi.json", "method": "GET", "duration_ms": 0, "outcome": "error"}
+INFO:     127.0.0.1:63344 - "GET /mcp_app/openapi.json HTTP/1.1" 404 Not Found
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/public/mcp_openapi.json", "method": "GET", "duration_ms": 4, "outcome": "success"}
+INFO:     127.0.0.1:63344 - "GET /public/mcp_openapi.json HTTP/1.1" 200 OK
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp/openapi.json", "method": "GET", "duration_ms": 12, "outcome": "error"}
+INFO:     127.0.0.1:63541 - "GET /mcp/openapi.json HTTP/1.1" 404 Not Found
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp_app/openapi.json", "method": "GET", "duration_ms": 0, "outcome": "error"}
+INFO:     127.0.0.1:63541 - "GET /mcp_app/openapi.json HTTP/1.1" 404 Not Found
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/public/mcp_openapi.json", "method": "GET", "duration_ms": 6, "outcome": "success"}
+INFO:     127.0.0.1:63541 - "GET /public/mcp_openapi.json HTTP/1.1" 200 OK
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp_openapi_dynamic.json", "method": "GET", "duration_ms": 0, "outcome": "error"}
+INFO:     127.0.0.1:63541 - "GET /mcp_openapi_dynamic.json HTTP/1.1" 404 Not Found
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp", "method": "POST", "duration_ms": 7, "outcome": "success"}
+INFO:     20.117.22.235:0 - "POST /mcp HTTP/1.1" 307 Temporary Redirect
+[09/26/25 22:36:32] ERROR    Original RuntimeError from mcp library: http.py:40
+                             Task group is not initialized. Make               
+                             sure to use run().                                
+                             +- Traceback (most recent call last) -+           
+                             | C:\GPT\Version_8\echo-bridge\.venv\ |           
+                             | Lib\site-packages\fastmcp\server\ht |           
+                             | tp.py:37 in __call__                |           
+                             |                                     |           
+                             |    34                               |           
+                             |    35     async def __call__(self,  |           
+                             |    36         try:                  |           
+                             | >  37             await self.sessio |           
+                             |    38         except RuntimeError a |           
+                             |    39             if str(e) == "Tas |           
+                             |    40                 logger.error( |           
+                             |                                     |           
+                             | C:\GPT\Version_8\echo-bridge\.venv\ |           
+                             | Lib\site-packages\mcp\server\stream |           
+                             | able_http_manager.py:138 in         |           
+                             | handle_request                      |           
+                             |                                     |           
+                             |   135             send: ASGI send f |           
+                             |   136         """                   |           
+                             |   137         if self._task_group i |           
+                             | > 138             raise RuntimeErro |           
+                             |   139                               |           
+                             |   140         # Dispatch to the app |           
+                             |   141         if self.stateless:    |           
+                             +-------------------------------------+           
+                             RuntimeError: Task group is not                   
+                             initialized. Make sure to use run().              
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp/", "method": "POST", "duration_ms": 89, "outcome": "error"}
+INFO:     20.117.22.235:0 - "POST /mcp/ HTTP/1.1" 500 Internal Server Error
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp", "method": "GET", "duration_ms": 0, "outcome": "success"}
+INFO:     20.117.22.235:0 - "GET /mcp HTTP/1.1" 307 Temporary Redirect
+                    ERROR    Original RuntimeError from mcp library: http.py:40
+                             Task group is not initialized. Make               
+                             sure to use run().                                
+                             +- Traceback (most recent call last) -+           
+                             | C:\GPT\Version_8\echo-bridge\.venv\ |           
+                             | Lib\site-packages\fastmcp\server\ht |           
+                             | tp.py:37 in __call__                |           
+                             |                                     |           
+                             |    34                               |           
+                             |    35     async def __call__(self,  |           
+                             |    36         try:                  |           
+                             | >  37             await self.sessio |           
+                             |    38         except RuntimeError a |           
+                             |    39             if str(e) == "Tas |           
+                             |    40                 logger.error( |           
+                             |                                     |           
+                             | C:\GPT\Version_8\echo-bridge\.venv\ |           
+                             | Lib\site-packages\mcp\server\stream |           
+                             | able_http_manager.py:138 in         |           
+                             | handle_request                      |           
+                             |                                     |           
+                             |   135             send: ASGI send f |           
+                             |   136         """                   |           
+                             |   137         if self._task_group i |           
+                             | > 138             raise RuntimeErro |           
+                             |   139                               |           
+                             |   140         # Dispatch to the app |           
+                             |   141         if self.stateless:    |           
+                             +-------------------------------------+           
+                             RuntimeError: Task group is not                   
+                             initialized. Make sure to use run().              
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp/", "method": "GET", "duration_ms": 16, "outcome": "error"}
+INFO:     20.117.22.235:0 - "GET /mcp/ HTTP/1.1" 500 Internal Server Error
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/", "method": "GET", "duration_ms": 44, "outcome": "success"}
+INFO:     20.117.22.225:0 - "GET / HTTP/1.1" 200 OK
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/favicon.svg", "method": "GET", "duration_ms": 2, "outcome": "error"}
+INFO:     20.117.22.231:0 - "GET /favicon.svg HTTP/1.1" 404 Not Found
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/favicon.png", "method": "GET", "duration_ms": 0, "outcome": "error"}
+INFO:     20.117.22.231:0 - "GET /favicon.png HTTP/1.1" 404 Not Found
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/favicon.ico", "method": "GET", "duration_ms": 0, "outcome": "error"}
+INFO:     20.117.22.228:0 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/public/chatgpt_tool_manifest.json", "method": "POST", "duration_ms": 1, "outcome": "error"}
+INFO:     20.117.22.232:0 - "POST /public/chatgpt_tool_manifest.json HTTP/1.1" 405 Method Not Allowed
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/public/chatgpt_tool_manifest.json", "method": "GET", "duration_ms": 9, "outcome": "success"}
+INFO:     20.117.22.237:0 - "GET /public/chatgpt_tool_manifest.json HTTP/1.1" 200 OK
