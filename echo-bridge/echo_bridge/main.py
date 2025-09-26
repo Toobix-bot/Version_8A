@@ -1,17 +1,19 @@
 from __future__ import annotations
 
 import json
+import os
 import logging
 from pathlib import Path
 from time import perf_counter
 from typing import Any, Optional, cast, Awaitable, Callable
 
 import yaml
-from fastapi import Depends, FastAPI, Header, HTTPException, Query
+from fastapi import Depends, FastAPI, Header, HTTPException, Query, Body
 from fastapi import Request
 from starlette.responses import Response
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 try:
     # FastMCP FastAPI integration (optional)
     from fastmcp.fastapi import mount_mcp  # type: ignore
@@ -156,6 +158,15 @@ logger.addHandler(handler)
 logger.setLevel(logging.INFO)
 
 app = FastAPI(title="ECHO-BRIDGE")
+# Allow CORS for local testing and for ChatGPT/tool tooling. In production you
+# should restrict origins to your hosted manifest / UI origins.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 app.mount(
     "/public",
     StaticFiles(directory=str(Path(__file__).resolve().parent.parent / "public"), html=True),
@@ -329,6 +340,34 @@ class GenerateRequest(BaseModel):
 def generate(req: GenerateRequest) -> dict[str, object]:
     # Dummy response for now
     return {"response": "Hier kommt später die KI-Antwort", "prompt": req.prompt, "contextIds": req.contextIds}
+
+
+# Bridge-compatible proxy endpoint for the echo_generate tool (module-level)
+@app.post("/bridge/link_echo_generate/echo_generate")
+def bridge_echo_generate(
+    body: GenerateRequest = Body(...),
+    x_api_key: Optional[str] = Header(default=None, alias="X-API-Key"),
+) -> dict[str, object]:
+    """Proxy handler used by bridge tools. It calls the local /generate implementation.
+
+    Behavior:
+    - If an API_KEY env is set ("API_KEY"), the handler will validate X-API-Key header.
+    - Otherwise it proxies directly to the internal generate() function.
+    """
+    # Optional API key guard (useful if the bridge should authenticate callers)
+    env_key = os.getenv("API_KEY")
+    if env_key:
+        if not x_api_key or x_api_key != env_key:
+            raise HTTPException(status_code=401, detail="Missing or invalid X-API-Key")
+
+    # Call the internal generate implementation directly (same-process)
+    try:
+        result = generate(body)
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"Bridge proxy error: {e}")
 
 
 @app.get("/soul/state")

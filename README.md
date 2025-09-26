@@ -53,3 +53,15 @@ ChatGPT cannot reach `127.0.0.1`. For web Chat:
 - ChatGPT Settings → Connectors → Custom → add your MCP URL.
 - If you see “This MCP server doesn't implement our specification”, verify tools schema and transport.
 
+Quick ChatGPT testing
+---------------------
+
+1. Start MCP server and Bridge (ports 3337 and 3333). Use `run_mcp_http.py` and `uvicorn echo_bridge.main:app` respectively (scripts/examples in `echo-bridge/README.md`).
+
+2. Expose `/mcp` via ngrok and copy the HTTPS URL from http://127.0.0.1:4040.
+
+3. Register the public `/mcp` URL in ChatGPT Developer Mode (or register the bridge POST endpoint `/bridge/link_echo_generate/echo_generate` if you prefer a simple HTTP tool).
+
+4. If you set `API_KEY` in `.env` or environment, remember to provide `X-API-Key` header when calling bridge endpoints.
+
+

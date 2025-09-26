@@ -1,0 +1,27 @@
+{
+  "uri": "/bridge/link_68d2c3c326908191959bb663d7a2a8b6/echo_generate",
+  "name": "bridge_echo_generate",
+  "description": "Generate a narrated response using the Groq-backed /generate endpoint, optionally with RAG context via contextIds.",
+  "namespace_description": "Echo Bridge generated tools",
+  "mime_type": "application/vnd.openai.pineapple-tool",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "prompt": { "title": "Prompt", "type": "string" },
+      "contextIds": {
+        "title": "Context IDs",
+        "type": "array",
+        "items": { "type": "string" }
+      },
+      "model": { "title": "Model", "type": "string", "default": "moonshotai/kimi-k2-instruct" },
+      "temperature": { "title": "Temperature", "type": "number", "default": 0.6 },
+      "max_tokens": { "title": "Max Tokens", "type": "integer", "default": 800 }
+    },
+    "required": ["prompt"]
+  },
+  "is_consequential": true,
+  "keywords": ["bridge", "echo_generate", "groq", "generate"],
+  "hint": "",
+  "is_discoverable": true,
+  "is_invokable": true
+}

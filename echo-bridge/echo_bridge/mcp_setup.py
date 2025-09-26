@@ -124,3 +124,65 @@ def echo_ingest_tool(source: str, title: str | None = None, text: str | None = N
     added = add_chunks(source, title, texts, meta)
     return {"added": added}
 
+
+# echo_generate tool: expose the /generate behavior via MCP tools
+try:
+    # Prefer using the API module if present
+    from apps.api.main import build_user_prompt, GROQ_API_KEY, build_system_prompt
+    from apps.api.main import fetch_chunk as api_fetch_chunk
+    _HAS_API = True
+except Exception:
+    _HAS_API = False
+
+
+@mcp.tool(name="echo_generate", output_schema={"type": "object"})
+def echo_generate_tool(prompt: str, contextIds: list[str] | None = None, model: str | None = None, temperature: float | None = None, max_tokens: int | None = None):
+    """Generate using Groq (or fallback) — mirrors the /generate endpoint."""
+    # Simple implementation: fetch contexts, build messages, call groq
+    contexts = []
+    if contextIds:
+        for cid in contextIds[:8]:
+            try:
+                if _HAS_API:
+                    contexts.append(api_fetch_chunk(cid))
+                else:
+                    # local fetch via memory service
+                    c = get_chunk(int(cid))
+                    if c:
+                        contexts.append({"id": str(c.id), "title": c.title or "", "content": [{"type": "text", "text": c.text}]})
+            except Exception:
+                pass
+
+    # Build messages
+    if _HAS_API:
+        messages = build_user_prompt(prompt, contexts)
+    else:
+        # minimal builder
+        parts = []
+        for c in contexts:
+            txt = "".join(t.get("text", "") for t in c.get("content", []) if t.get("type") == "text")
+            parts.append(f"# {c.get('title','')}\n{txt[:2000]}")
+        ctx_block = "\n\n".join(parts)
+        messages = [{"role": "system", "content": "Du bist der Erzähler/Assistent."}, {"role": "user", "content": f"Benutzeranfrage:\n{prompt}\n\n---\nKontext:\n{ctx_block}" if parts else prompt}]
+
+    # Call groq SDK if available
+    try:
+        from groq import Groq
+        key = None
+        try:
+            key = GROQ_API_KEY if _HAS_API else None
+        except Exception:
+            key = None
+        if key:
+            client = Groq(api_key=key)
+            mdl = model or ("moonshotai/kimi-k2-instruct")
+            resp = client.chat.completions.create(model=mdl, messages=messages, temperature=temperature or 0.6, max_tokens=max_tokens or 800)
+            text = resp.choices[0].message.content
+        else:
+            text = "(groq not configured) " + prompt[:400]
+    except Exception:
+        text = "(groq call failed) " + prompt[:200]
+
+    sources = [{"id": c.get("id"), "title": c.get("title")} for c in contexts]
+    return {"text": text, "sources": sources}
+
