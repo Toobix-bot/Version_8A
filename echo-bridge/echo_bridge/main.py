@@ -503,6 +503,29 @@ def mcp_openapi() -> JSONResponse:
             spec["x-mcp-tools"] = tools
 
         return JSONResponse(content=spec)
+
+
+    # Convenience: serve the static MCP openapi at the /mcp root so external
+    # registrars that probe the base path (e.g., GET /mcp) get a JSON response
+    # instead of a 404 or the app's index page. This helps tunnels that sometimes
+    # rewrite base paths and makes ChatGPT registration more reliable.
+    @app.get("/mcp")
+    @app.get("/mcp/")
+    def mcp_root() -> JSONResponse:
+        public_dir = Path(__file__).resolve().parent.parent / "public"
+        openapi_path = public_dir / "mcp_openapi.json"
+        if openapi_path.exists():
+            try:
+                data = json.loads(openapi_path.read_text(encoding="utf-8"))
+                return JSONResponse(content=data, media_type="application/json")
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=f"Failed to load mcp openapi: {e}")
+        # Fallback: return the dynamic spec so callers still see a valid JSON
+        try:
+            spec = _build_dynamic_openapi_spec()
+            return JSONResponse(content=spec, media_type="application/json")
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Failed to build dynamic mcp openapi: {e}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to build dynamic openapi spec: {e}")
 
