@@ -1,16 +1,17 @@
 ﻿{
     "schema_version":  "v1",
-    "name_for_human":  "ECHO Generate",
-    "name_for_model":  "echo_generate",
-    "description_for_human":  "Generate narrated scenes via the ECHO bridge (RAG-enabled).",
-    "description_for_model":  "Use this tool to generate text given a prompt and optional contextIds.",
-    "auth": {
-        "type": "api_key",
-        "instructions": "Send the API key in the X-API-Key header when calling bridge endpoints.",
-        "key_name": "X-API-Key"
-    },
-    "api": {
-        "type": "openapi",
-        "url": "https://multiplicative-unapprehendably-marisha.ngrok-free.dev/mcp/openapi.json"
-    }
+    "name_for_human":  "ECHO Bridge",
+    "name_for_model":  "echo_bridge",
+    "description_for_human":  "Suchen, Abrufen, und Generieren auf deiner ECHO-Wissensbasis.",
+    "description_for_model":  "Tools: /ingest, /search, /fetch, /generate (Groq-backed). Use search→fetch to build context, then call generate.",
+    "auth":  {
+                 "type":  "none"
+             },
+    "api":  {
+                "type":  "openapi",
+                "url":  "https://multiplicative-unapprehendably-marisha.ngrok-free.dev/public/openapi.json",
+                "is_user_authenticated":  false
+            },
+    "contact_email":  "admin@example.com",
+    "legal_info_url":  "https://multiplicative-unapprehendably-marisha.ngrok-free.dev/legal"
 }
