@@ -170,6 +170,13 @@ app.add_middleware(
 public_dir = Path(__file__).resolve().parent.parent / "public"
 
 
+def _load_json_file(p: Path):
+    """Load a JSON file tolerantly, decoding BOM if present."""
+    # Use utf-8-sig so files saved with a UTF-8 BOM are handled correctly.
+    txt = p.read_text(encoding="utf-8-sig")
+    return json.loads(txt)
+
+
 @app.middleware("http")
 async def public_json_middleware(request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
     # Intercept requests for /public/*.json and serve them as JSONResponse
@@ -183,8 +190,7 @@ async def public_json_middleware(request: Request, call_next: Callable[[Request]
             p = public_dir / rel
             if p.exists() and p.is_file():
                 try:
-                    txt = p.read_text(encoding="utf-8")
-                    data = json.loads(txt)
+                    data = _load_json_file(p)
                     return JSONResponse(content=data, media_type="application/json")
                 except Exception as e:
                     return JSONResponse(status_code=500, content={"detail": f"Failed to read JSON: {e}"})
@@ -449,7 +455,7 @@ def mcp_openapi() -> JSONResponse:
     # Prefer an explicit static file for stability
     if openapi_path.exists():
         try:
-            data = json.loads(openapi_path.read_text(encoding="utf-8"))
+            data = _load_json_file(openapi_path)
             return JSONResponse(content=data)
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Failed to load openapi spec: {e}")
@@ -504,6 +510,8 @@ def mcp_openapi() -> JSONResponse:
 
         return JSONResponse(content=spec)
 
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to build dynamic openapi spec: {e}")
 
     # Convenience: serve the static MCP openapi at the /mcp root so external
     # registrars that probe the base path (e.g., GET /mcp) get a JSON response
@@ -516,7 +524,7 @@ def mcp_openapi() -> JSONResponse:
         openapi_path = public_dir / "mcp_openapi.json"
         if openapi_path.exists():
             try:
-                data = json.loads(openapi_path.read_text(encoding="utf-8"))
+                data = _load_json_file(openapi_path)
                 return JSONResponse(content=data, media_type="application/json")
             except Exception as e:
                 raise HTTPException(status_code=500, detail=f"Failed to load mcp openapi: {e}")
@@ -526,8 +534,7 @@ def mcp_openapi() -> JSONResponse:
             return JSONResponse(content=spec, media_type="application/json")
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Failed to build dynamic mcp openapi: {e}")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to build dynamic openapi spec: {e}")
+        
 
 
 def _build_dynamic_openapi_spec() -> dict:
@@ -593,7 +600,7 @@ def serve_chatgpt_manifest(request: Request) -> JSONResponse:
     if not manifest_path.exists():
         raise HTTPException(status_code=404, detail="Manifest not found")
     try:
-        data = json.loads(manifest_path.read_text(encoding="utf-8"))
+        data = _load_json_file(manifest_path)
         # Log the client for debugging ngrok/proxy behavior
         client = request.client.host if request.client else "unknown"
         logger.info("serving_manifest", extra={"client": client, "path": "/public/chatgpt_tool_manifest.json"})
@@ -609,7 +616,7 @@ def serve_openapi(request: Request) -> JSONResponse:
     if not openapi_path.exists():
         raise HTTPException(status_code=404, detail="OpenAPI not found")
     try:
-        data = json.loads(openapi_path.read_text(encoding="utf-8"))
+        data = _load_json_file(openapi_path)
         client = request.client.host if request.client else "unknown"
         logger.info("serving_openapi", extra={"client": client, "path": "/public/openapi.json"})
         return JSONResponse(content=data, media_type="application/json")
