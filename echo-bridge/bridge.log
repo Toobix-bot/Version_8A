@@ -1,0 +1,14 @@
+INFO:     Started server process [8460]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:3333 (Press CTRL+C to quit)
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/health", "method": "GET", "duration_ms": 8, "outcome": "success"}
+INFO:     127.0.0.1:55626 - "GET /health HTTP/1.1" 200 OK
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/bridge/link_echo_generate/echo_generate", "method": "POST", "duration_ms": 8, "outcome": "error"}
+INFO:     127.0.0.1:55628 - "POST /bridge/link_echo_generate/echo_generate HTTP/1.1" 401 Unauthorized
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/bridge/link_echo_generate/echo_generate", "method": "POST", "duration_ms": 2, "outcome": "success"}
+INFO:     127.0.0.1:55629 - "POST /bridge/link_echo_generate/echo_generate HTTP/1.1" 200 OK
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/bridge/link_echo_generate/echo_generate", "method": "POST", "duration_ms": 19, "outcome": "error"}
+INFO:     127.0.0.1:55668 - "POST /bridge/link_echo_generate/echo_generate HTTP/1.1" 401 Unauthorized
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/bridge/link_echo_generate/echo_generate", "method": "POST", "duration_ms": 15, "outcome": "success"}
+INFO:     127.0.0.1:55752 - "POST /bridge/link_echo_generate/echo_generate HTTP/1.1" 200 OK

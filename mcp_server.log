@@ -1,0 +1,68 @@
+
+
++----------------------------------------------------------------------------+
+|                                                                            |
+|        _ __ ___  _____           __  __  _____________    ____    ____     |
+|       _ __ ___ .'____/___ ______/ /_/  |/  / ____/ __ \  |___ \  / __ \    |
+|      _ __ ___ / /_  / __ `/ ___/ __/ /|_/ / /   / /_/ /  ___/ / / / / /    |
+|     _ __ ___ / __/ / /_/ (__  ) /_/ /  / / /___/ ____/  /  __/_/ /_/ /     |
+|    _ __ ___ /_/    \____/____/\__/_/  /_/\____/_/      /_____(*)____/      |
+|                                                                            |
+|                                                                            |
+|                                FastMCP  2.0                                |
+|                                                                            |
+|                                                                            |
+|               \U0001f5a5\ufe0f  Server name:     Echo Bridge                              |
+|               \U0001f4e6 Transport:       Streamable-HTTP                          |
+|               \U0001f517 Server URL:      http://127.0.0.1:3337/mcp                |
+|                                                                            |
+|               \U0001f3ce\ufe0f  FastMCP version: 2.12.3                                   |
+|               \U0001f91d MCP SDK version: 1.12.4                                   |
+|                                                                            |
+|               \U0001f4da Docs:            https://gofastmcp.com                    |
+|               \U0001f680 Deploy:          https://fastmcp.cloud                    |
+|                                                                            |
++----------------------------------------------------------------------------+
+
+
+[09/26/25 21:19:37] INFO     Starting MCP server 'Echo Bridge'   server.py:1572
+                             with transport 'http' on                          
+                             http://127.0.0.1:3337/mcp                         
+INFO:     Started server process [5668]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:3337 (Press CTRL+C to quit)
+INFO:     127.0.0.1:55665 - "POST /mcp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55751 - "POST /mcp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56014 - "POST /mcp HTTP/1.1" 406 Not Acceptable
+Error in message router
+Traceback (most recent call last):
+  File "c:\GPT\Version_8\echo-bridge\.venv\Lib\site-packages\mcp\server\streamable_http.py", line 831, in message_router
+    async for session_message in write_stream_reader:
+    ...<46 lines>...
+            )
+  File "c:\GPT\Version_8\echo-bridge\.venv\Lib\site-packages\anyio\abc\_streams.py", line 41, in __anext__
+    return await self.receive()
+           ^^^^^^^^^^^^^^^^^^^^
+  File "c:\GPT\Version_8\echo-bridge\.venv\Lib\site-packages\anyio\streams\memory.py", line 111, in receive
+    return self.receive_nowait()
+           ~~~~~~~~~~~~~~~~~~~^^
+  File "c:\GPT\Version_8\echo-bridge\.venv\Lib\site-packages\anyio\streams\memory.py", line 93, in receive_nowait
+    raise ClosedResourceError
+anyio.ClosedResourceError
+INFO:     127.0.0.1:56078 - "POST /mcp HTTP/1.1" 406 Not Acceptable
+ERROR:mcp.server.streamable_http:Error in message router
+Traceback (most recent call last):
+  File "c:\GPT\Version_8\echo-bridge\.venv\Lib\site-packages\mcp\server\streamable_http.py", line 831, in message_router
+    async for session_message in write_stream_reader:
+    ...<46 lines>...
+            )
+  File "c:\GPT\Version_8\echo-bridge\.venv\Lib\site-packages\anyio\abc\_streams.py", line 41, in __anext__
+    return await self.receive()
+           ^^^^^^^^^^^^^^^^^^^^
+  File "c:\GPT\Version_8\echo-bridge\.venv\Lib\site-packages\anyio\streams\memory.py", line 111, in receive
+    return self.receive_nowait()
+           ~~~~~~~~~~~~~~~~~~~^^
+  File "c:\GPT\Version_8\echo-bridge\.venv\Lib\site-packages\anyio\streams\memory.py", line 93, in receive_nowait
+    raise ClosedResourceError
+anyio.ClosedResourceError
