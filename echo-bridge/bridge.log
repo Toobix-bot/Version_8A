@@ -614,3 +614,73 @@ INFO:     20.117.22.228:0 - "GET /favicon.ico HTTP/1.1" 404 Not Found
 INFO:     20.117.22.232:0 - "POST /public/chatgpt_tool_manifest.json HTTP/1.1" 405 Method Not Allowed
 {"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/public/chatgpt_tool_manifest.json", "method": "GET", "duration_ms": 9, "outcome": "success"}
 INFO:     20.117.22.237:0 - "GET /public/chatgpt_tool_manifest.json HTTP/1.1" 200 OK
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp", "method": "POST", "duration_ms": 9, "outcome": "success"}
+INFO:     20.117.22.238:0 - "POST /mcp HTTP/1.1" 307 Temporary Redirect
+[09/26/25 22:39:07] ERROR    Original RuntimeError from mcp library: http.py:40
+                             Task group is not initialized. Make               
+                             sure to use run().                                
+                             +- Traceback (most recent call last) -+           
+                             | C:\GPT\Version_8\echo-bridge\.venv\ |           
+                             | Lib\site-packages\fastmcp\server\ht |           
+                             | tp.py:37 in __call__                |           
+                             |                                     |           
+                             |    34                               |           
+                             |    35     async def __call__(self,  |           
+                             |    36         try:                  |           
+                             | >  37             await self.sessio |           
+                             |    38         except RuntimeError a |           
+                             |    39             if str(e) == "Tas |           
+                             |    40                 logger.error( |           
+                             |                                     |           
+                             | C:\GPT\Version_8\echo-bridge\.venv\ |           
+                             | Lib\site-packages\mcp\server\stream |           
+                             | able_http_manager.py:138 in         |           
+                             | handle_request                      |           
+                             |                                     |           
+                             |   135             send: ASGI send f |           
+                             |   136         """                   |           
+                             |   137         if self._task_group i |           
+                             | > 138             raise RuntimeErro |           
+                             |   139                               |           
+                             |   140         # Dispatch to the app |           
+                             |   141         if self.stateless:    |           
+                             +-------------------------------------+           
+                             RuntimeError: Task group is not                   
+                             initialized. Make sure to use run().              
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp/", "method": "POST", "duration_ms": 84, "outcome": "error"}
+INFO:     20.117.22.238:0 - "POST /mcp/ HTTP/1.1" 500 Internal Server Error
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp", "method": "GET", "duration_ms": 0, "outcome": "success"}
+INFO:     20.117.22.225:0 - "GET /mcp HTTP/1.1" 307 Temporary Redirect
+                    ERROR    Original RuntimeError from mcp library: http.py:40
+                             Task group is not initialized. Make               
+                             sure to use run().                                
+                             +- Traceback (most recent call last) -+           
+                             | C:\GPT\Version_8\echo-bridge\.venv\ |           
+                             | Lib\site-packages\fastmcp\server\ht |           
+                             | tp.py:37 in __call__                |           
+                             |                                     |           
+                             |    34                               |           
+                             |    35     async def __call__(self,  |           
+                             |    36         try:                  |           
+                             | >  37             await self.sessio |           
+                             |    38         except RuntimeError a |           
+                             |    39             if str(e) == "Tas |           
+                             |    40                 logger.error( |           
+                             |                                     |           
+                             | C:\GPT\Version_8\echo-bridge\.venv\ |           
+                             | Lib\site-packages\mcp\server\stream |           
+                             | able_http_manager.py:138 in         |           
+                             | handle_request                      |           
+                             |                                     |           
+                             |   135             send: ASGI send f |           
+                             |   136         """                   |           
+                             |   137         if self._task_group i |           
+                             | > 138             raise RuntimeErro |           
+                             |   139                               |           
+                             |   140         # Dispatch to the app |           
+                             |   141         if self.stateless:    |           
+                             +-------------------------------------+           
+                             RuntimeError: Task group is not                   
+                             initialized. Make sure to use run().              
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp/", "method": "GET", "duration_ms": 20, "outcome": "error"}
+INFO:     20.117.22.225:0 - "GET /mcp/ HTTP/1.1" 500 Internal Server Error
