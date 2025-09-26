@@ -1,0 +1,51 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "ECHO Bridge API (gist-ready)",
+    "version": "0.1.0",
+    "description": "Minimal OpenAPI for the ECHO bridge used by ChatGPT Developer Tools. Edit servers[0].url if your public host is different."
+  },
+  "servers": [
+    {
+      "url": "https://multiplicative-unapprehendably-marisha.ngrok-free.dev",
+      "description": "Public tunnel to your local bridge (ngrok)"
+    }
+  ],
+  "paths": {
+    "/bridge/link_echo_generate/echo_generate": {
+      "post": {
+        "summary": "Proxy to local echo_generate",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "type": "object" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Echoed generate result",
+            "content": {
+              "application/json": {
+                "schema": { "type": "object" }
+              }
+            }
+          }
+        },
+        "security": [
+          { "x-api-key": [] }
+        ]
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "x-api-key": {
+        "type": "apiKey",
+        "name": "X-API-Key",
+        "in": "header"
+      }
+    }
+  }
+}

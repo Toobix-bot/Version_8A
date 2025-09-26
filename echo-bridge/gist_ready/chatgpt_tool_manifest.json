@@ -1,0 +1,18 @@
+{
+  "schema_version": "v1",
+  "name_for_human": "ECHO-Bridge (local)",
+  "name_for_model": "echo_bridge",
+  "description_for_human": "Local ECHO bridge that exposes an echo_generate tool via a bridge proxy.",
+  "description_for_model": "A development tool that forwards generate requests to your local ECHO bridge. Requires an X-API-Key header if configured.",
+  "auth": {
+    "type": "service_http",
+    "instructions": "If your bridge requires an API key, set the header X-API-Key to the value configured on your bridge."
+  },
+  "api": {
+    "type": "openapi",
+    "url": "PASTE_RAW_OPENAPI_JSON_URL_HERE",
+    "is_user_authenticated": false
+  },
+  "contact_email": "",
+  "legal_info_url": ""
+}
