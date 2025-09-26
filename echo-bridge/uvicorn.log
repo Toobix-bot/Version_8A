@@ -1,2 +1,7 @@
-INFO:     20.117.22.232:0 - "POST /mcp HTTP/1.1" 404 Not Found
-INFO:     20.117.22.233:0 - "GET /mcp HTTP/1.1" 404 Not Found
+INFO:     2a02:3036:20b:1e2e:c50c:635a:1c02:cd78:0 - "POST /generate HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53358 - "GET /public/openapi.json HTTP/1.1" 500 Internal Server Error
+INFO:     52.252.113.243:0 - "POST /mcp HTTP/1.1" 404 Not Found
+INFO:     52.252.113.255:0 - "GET /mcp HTTP/1.1" 404 Not Found
+INFO:     2a02:3036:20b:1e2e:c50c:635a:1c02:cd78:0 - "POST /generate HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64266 - "GET /public/chatgpt_tool_manifest.json HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:64266 - "GET /public/openapi.json HTTP/1.1" 500 Internal Server Error

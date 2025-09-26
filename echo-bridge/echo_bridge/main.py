@@ -167,12 +167,39 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+public_dir = Path(__file__).resolve().parent.parent / "public"
+
+
+@app.middleware("http")
+async def public_json_middleware(request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
+    # Intercept requests for /public/*.json and serve them as JSONResponse
+    # before the StaticFiles mount handles them. This guarantees application/json
+    # content-type even when proxied by tunnels like ngrok.
+    try:
+        path = request.url.path
+        if path.startswith("/public/") and path.lower().endswith(".json"):
+            # Build the file path relative to public_dir (strip leading '/public/')
+            rel = path[len("/public/"):]
+            p = public_dir / rel
+            if p.exists() and p.is_file():
+                try:
+                    txt = p.read_text(encoding="utf-8")
+                    data = json.loads(txt)
+                    return JSONResponse(content=data, media_type="application/json")
+                except Exception as e:
+                    return JSONResponse(status_code=500, content={"detail": f"Failed to read JSON: {e}"})
+    except Exception:
+        # If anything goes wrong here, fall through to normal handling so we
+        # don't block unrelated endpoints.
+        pass
+    return await call_next(request)
+
+
 app.mount(
     "/public",
     StaticFiles(directory=str(Path(__file__).resolve().parent.parent / "public"), html=True),
     name="public",
 )
-
 # Mount MCP under /mcp
 mounted = False
 if mount_mcp:
@@ -532,3 +559,36 @@ def mcp_openapi_dynamic() -> JSONResponse:
         return JSONResponse(content=spec)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to build dynamic openapi spec: {e}")
+
+
+# Explicitly serve manifest and openapi JSON files with application/json to
+# ensure tunnels/proxies (ngrok) receive the correct Content-Type and body.
+@app.get("/public/chatgpt_tool_manifest.json")
+def serve_chatgpt_manifest(request: Request) -> JSONResponse:
+    public_dir = Path(__file__).resolve().parent.parent / "public"
+    manifest_path = public_dir / "chatgpt_tool_manifest.json"
+    if not manifest_path.exists():
+        raise HTTPException(status_code=404, detail="Manifest not found")
+    try:
+        data = json.loads(manifest_path.read_text(encoding="utf-8"))
+        # Log the client for debugging ngrok/proxy behavior
+        client = request.client.host if request.client else "unknown"
+        logger.info("serving_manifest", extra={"client": client, "path": "/public/chatgpt_tool_manifest.json"})
+        return JSONResponse(content=data, media_type="application/json")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to read manifest: {e}")
+
+
+@app.get("/public/openapi.json")
+def serve_openapi(request: Request) -> JSONResponse:
+    public_dir = Path(__file__).resolve().parent.parent / "public"
+    openapi_path = public_dir / "openapi.json"
+    if not openapi_path.exists():
+        raise HTTPException(status_code=404, detail="OpenAPI not found")
+    try:
+        data = json.loads(openapi_path.read_text(encoding="utf-8"))
+        client = request.client.host if request.client else "unknown"
+        logger.info("serving_openapi", extra={"client": client, "path": "/public/openapi.json"})
+        return JSONResponse(content=data, media_type="application/json")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to read openapi: {e}")
