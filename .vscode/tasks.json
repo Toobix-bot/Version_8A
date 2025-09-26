@@ -1,0 +1,11 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "api:dev",
+      "type": "shell",
+      "command": "uvicorn echo_bridge.main:app --reload --host 127.0.0.1 --port 3333",
+      "options": { "env": { "PYTHONUNBUFFERED": "1" } }
+    }
+  ]
+}
