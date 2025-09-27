@@ -1,0 +1,13 @@
+{
+    "openapi":  "3.1.0",
+    "info":  {
+                 "title":  "ECHO Bridge API",
+                 "version":  "1.0.0"
+             },
+    "servers":  [
+                    {
+                        "url":  "https://multiplicative-unapprehendably-marisha.ngrok-free.dev"
+                    }
+                ],
+    "paths":  {}
+}
