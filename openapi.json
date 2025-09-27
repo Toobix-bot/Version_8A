@@ -1,0 +1,84 @@
+{
+  "openapi": "3.1.0",
+  "info": { "title": "ECHO Bridge API", "version": "1.0.0" },
+  "servers": [{ "url": "https://multiplicative-unapprehendably-marisha.ngrok-free.dev" }],
+  "paths": {
+    "/ingest": {
+      "post": {
+        "summary": "Ingest a document",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["source"],
+                "properties": {
+                  "source": { "type": "string" },
+                  "title": { "type": "string" },
+                  "text": { "type": "string" },
+                  "tags": { "type": "array", "items": { "type": "string" } }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "ok" } }
+      }
+    },
+    "/search": {
+      "post": {
+        "summary": "Full-text search",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["query"],
+                "properties": { "query": { "type": "string" }, "k": { "type": "integer", "default": 5 } }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "ok" } }
+      }
+    },
+    "/fetch": {
+      "post": {
+        "summary": "Fetch by id",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "type": "object", "required": ["id"], "properties": { "id": { "type": "string" } } } }
+          }
+        },
+        "responses": { "200": { "description": "ok" } }
+      }
+    },
+    "/generate": {
+      "post": {
+        "summary": "Generate with Groq + optional RAG context",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["prompt"],
+                "properties": {
+                  "prompt": { "type": "string" },
+                  "contextIds": { "type": "array", "items": { "type": "string" } },
+                  "model": { "type": "string", "default": "llama-3.1-70b-versatile" },
+                  "temperature": { "type": "number", "default": 0.6 },
+                  "max_tokens": { "type": "integer", "default": 800 }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "ok" } }
+      }
+    }
+  }
+}
