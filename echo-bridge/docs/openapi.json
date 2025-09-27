@@ -6,7 +6,7 @@
              },
     "servers":  [
                     {
-                        "url":  "__GITHUB_PAGES_BASE__"
+                        "url":  "https://toobix-bot.github.io/Version_8A"
                     }
                 ],
     "paths":  {
@@ -158,3 +158,5 @@
                                 }
               }
 }
+
+
