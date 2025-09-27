@@ -177,6 +177,58 @@ def _load_json_file(p: Path):
     return json.loads(txt)
 
 
+@app.get("/public/openapi.json")
+def serve_openapi() -> JSONResponse:
+    """Serve the public OpenAPI JSON with explicit application/json content-type."""
+    p = public_dir / "openapi.json"
+    if not p.exists():
+        raise HTTPException(status_code=404, detail="openapi.json not found")
+    try:
+        data = _load_json_file(p)
+        return JSONResponse(content=data, media_type="application/json")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to read openapi.json: {e}")
+
+
+@app.get("/public/chatgpt_tool_manifest.json")
+def serve_manifest() -> JSONResponse:
+    """Serve the ChatGPT tool manifest with explicit application/json content-type."""
+    p = public_dir / "chatgpt_tool_manifest.json"
+    if not p.exists():
+        raise HTTPException(status_code=404, detail="chatgpt_tool_manifest.json not found")
+    try:
+        data = _load_json_file(p)
+        return JSONResponse(content=data, media_type="application/json")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to read chatgpt manifest: {e}")
+
+
+@app.get("/openapi.json")
+def serve_openapi_root() -> JSONResponse:
+    """Fallback root OpenAPI JSON endpoint. Returns same content as /public/openapi.json."""
+    p = public_dir / "openapi.json"
+    if not p.exists():
+        raise HTTPException(status_code=404, detail="openapi.json not found")
+    try:
+        data = _load_json_file(p)
+        return JSONResponse(content=data, media_type="application/json")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to read openapi.json: {e}")
+
+
+@app.get("/chatgpt_tool_manifest.json")
+def serve_manifest_root() -> JSONResponse:
+    """Fallback root manifest endpoint. Returns same content as /public/chatgpt_tool_manifest.json."""
+    p = public_dir / "chatgpt_tool_manifest.json"
+    if not p.exists():
+        raise HTTPException(status_code=404, detail="chatgpt_tool_manifest.json not found")
+    try:
+        data = _load_json_file(p)
+        return JSONResponse(content=data, media_type="application/json")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to read chatgpt manifest: {e}")
+
+
 @app.middleware("http")
 async def public_json_middleware(request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
     # Intercept requests for /public/*.json and serve them as JSONResponse
@@ -206,6 +258,7 @@ app.mount(
     StaticFiles(directory=str(Path(__file__).resolve().parent.parent / "public"), html=True),
     name="public",
 )
+
 # Mount MCP under /mcp
 mounted = False
 if mount_mcp:

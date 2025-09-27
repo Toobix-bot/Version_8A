@@ -9,9 +9,9 @@
              },
     "api":  {
                 "type":  "openapi",
-                "url":  "https://preservation-perspective-observe-plastic.trycloudflare.com/public/openapi.json",
+                "url":  "https://multiplicative-unapprehendably-marisha.ngrok-free.dev/public/openapi.json",
                 "is_user_authenticated":  false
             },
     "contact_email":  "admin@example.com",
-    "legal_info_url":  "https://preservation-perspective-observe-plastic.trycloudflare.com/legal"
+    "legal_info_url":  "https://multiplicative-unapprehendably-marisha.ngrok-free.dev/legal"
 }
