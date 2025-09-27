@@ -1,0 +1,19 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Echo Bridge OpenAPI",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/bridge/link_echo_generate/echo_generate": {
+      "post": {
+        "summary": "Echo generate proxy",
+        "responses": {
+          "200": {
+            "description": "Successful echo response"
+          }
+        }
+      }
+    }
+  }
+}
