@@ -1,0 +1,15 @@
+{
+  "schema_version": "v1",
+  "name_for_human": "ECHO Bridge (Cloudflare)",
+  "name_for_model": "echo_bridge",
+  "description_for_human": "ECHO Bridge — Suche, Abruf und Generierung (über Cloudflare Tunnel).",
+  "description_for_model": "Tools: /ingest, /search, /fetch, /generate. Use search→fetch to build context, then call generate.",
+  "auth": { "type": "none" },
+  "api": {
+    "type": "openapi",
+    "url": "https://heaven-federation-writing-tap.trycloudflare.com/mcp/openapi.json",
+    "is_user_authenticated": false
+  },
+  "contact_email": "admin@example.com",
+  "legal_info_url": "https://heaven-federation-writing-tap.trycloudflare.com/legal"
+}
