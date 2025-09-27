@@ -1,18 +1,18 @@
-{
-  "schema_version": "v1",
-  "name_for_human": "Echo Bridge",
-  "name_for_model": "echo_bridge",
-  "description_for_human": "A test echo tool that returns the input prompt.",
-  "description_for_model": "Calls the echo bridge to echo the prompt.",
-  "auth": {
-    "type": "none"
-  },
-  "api": {
-    "type": "openapi",
-    "url": "https://example.com/openapi.json",
-    "is_user_authenticated": false
-  },
-  "logo_url": "https://example.com/logo.png",
-  "contact_email": "dev@example.com",
-  "legal_info_url": "https://example.com/legal"
+﻿{
+    "schema_version":  "v1",
+    "name_for_human":  "Echo Bridge",
+    "name_for_model":  "echo_bridge",
+    "description_for_human":  "A test echo tool that returns the input prompt.",
+    "description_for_model":  "Calls the echo bridge to echo the prompt.",
+    "auth":  {
+                 "type":  "none"
+             },
+    "api":  {
+                "type":  "openapi",
+                "url":  "https://toobix-bot.github.io/Version_8A/public/openapi.json",
+                "is_user_authenticated":  false
+            },
+    "logo_url":  "https://example.com/logo.png",
+    "contact_email":  "dev@example.com",
+    "legal_info_url":  "https://example.com/legal"
 }
