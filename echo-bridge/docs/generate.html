@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ECHO Generate</title>
+  <style>body{font-family:system-ui,Segoe UI,Roboto,sans-serif;padding:1rem}label,input,button,textarea{display:block;width:100%;margin-top:.5rem}textarea{min-height:120px}</style>
+</head>
+<body>
+  <h1>ECHO Generate</h1>
+  <label>Prompt
+    <textarea id="prompt">Schreibe eine kurze Szene im Stil von ECHO.</textarea>
+  </label>
+  <label>Context IDs (optional, comma separated)
+    <input id="ctx" placeholder="1,2" />
+  </label>
+  <label>API Key (optional for bridge if enabled)
+    <input id="key" placeholder="X-API-Key" />
+  </label>
+  <button id="go">Generate</button>
+
+  <h3>Result</h3>
+  <pre id="out">—</pre>
+
+  <h3>History</h3>
+  <div id="history">(no runs yet)</div>
+
+  <script>
+  async function callBridge(prompt, ctx, key){
+    const url = '/bridge/link_echo_generate/echo_generate';
+    const body = { prompt, contextIds: ctx };
+    const headers = { 'Content-Type': 'application/json' };
+    if(key) headers['X-API-Key'] = key;
+    const r = await fetch(url, { method:'POST', headers, body: JSON.stringify(body) });
+    let json = null;
+    try{ json = await r.json(); }catch(e){ json = { ok:false, text: await r.text() }; }
+    return { ok: r.ok, status: r.status, json };
+  }
+  document.getElementById('go').addEventListener('click', async ()=>{
+    const prompt = document.getElementById('prompt').value;
+    const ctx = document.getElementById('ctx').value.split(',').map(s=>s.trim()).filter(Boolean);
+    const key = document.getElementById('key').value || null;
+    document.getElementById('out').textContent = 'waiting...';
+    try{
+      const res = await callBridge(prompt, ctx, key);
+      document.getElementById('out').textContent = JSON.stringify(res, null, 2);
+      const hist = document.getElementById('history');
+      const entry = document.createElement('div');
+      entry.style.borderTop = '1px solid #eee';
+      entry.style.padding = '8px 0';
+      const h = document.createElement('div');
+      h.textContent = (new Date()).toLocaleString() + ' — ' + (res.status || '');
+      entry.appendChild(h);
+      const pre = document.createElement('pre');
+      pre.textContent = JSON.stringify(res.json, null, 2);
+      entry.appendChild(pre);
+      // If contextIds returned, add clickable links to chunk viewer
+      try{
+        const ids = (res.json && res.json.contextIds) || [];
+        if(Array.isArray(ids) && ids.length){
+          const links = document.createElement('div');
+          links.textContent = 'Context: ';
+          ids.forEach(id=>{
+            const a = document.createElement('a');
+            a.href = '/chunks/' + id;
+            a.textContent = String(id);
+            a.style.marginRight = '8px';
+            links.appendChild(a);
+          });
+          entry.appendChild(links);
+        }
+      }catch(e){}
+      hist.insertBefore(entry, hist.firstChild);
+    }catch(e){ document.getElementById('out').textContent = String(e); }
+  });
+  </script>
+</body>
+</html>
