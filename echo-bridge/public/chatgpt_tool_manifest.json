@@ -9,9 +9,9 @@
              },
     "api":  {
                 "type":  "openapi",
-                "url":  "https://multiplicative-unapprehendably-marisha.ngrok-free.dev/public/openapi.json",
+                "url":  "https://toobix-bot.github.io/Version_8A/echo-bridge/public/openapi.json",
                 "is_user_authenticated":  false
             },
     "contact_email":  "admin@example.com",
-    "legal_info_url":  "https://multiplicative-unapprehendably-marisha.ngrok-free.dev/legal"
+    "legal_info_url":  "https://toobix-bot.github.io/Version_8A/echo-bridge/legal"
 }
