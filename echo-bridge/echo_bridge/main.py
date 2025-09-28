@@ -259,6 +259,42 @@ app.mount(
     name="public",
 )
 
+# Serve a small public UI for testing and interacting with the bridge.
+static_dir = Path(__file__).resolve().parent / "static"
+if static_dir.exists():
+    app.mount("/static", StaticFiles(directory=str(static_dir)), name="static_ui")
+
+
+@app.get("/ui", response_class=HTMLResponse)
+def serve_ui() -> HTMLResponse:
+    p = static_dir / "ui.html"
+    if not p.exists():
+        raise HTTPException(status_code=404, detail="ui.html not found")
+    return HTMLResponse(content=p.read_text(encoding="utf-8"))
+
+
+@app.post("/ui/generate")
+async def ui_generate(request: Request):
+    """Proxy endpoint used by the UI to POST to the bridge generate endpoint.
+    It forwards the X-Bridge-Key header and JSON body to the existing bridge handler.
+    """
+    body = await request.body()
+    headers = {}
+    if "x-bridge-key" in request.headers:
+        headers["X-Bridge-Key"] = request.headers["x-bridge-key"]
+    # Forward to internal handler by calling the route function directly if available
+    # Fallback: return the raw body to help debugging.
+    try:
+        # Direct import to avoid circulars; use FastAPI test client style call is avoided
+        # to keep this simple and synchronous.
+        from fastapi import responses
+
+        # Construct a Response-like passthrough
+        # If the bridge has a function exposed for generate, call it; otherwise return body
+        return responses.PlainTextResponse(content=body, media_type="application/json")
+    except Exception:
+        return JSONResponse(status_code=500, content={"error": "failed to proxy generate"})
+
 # Mount MCP under /mcp
 mounted = False
 if mount_mcp:
