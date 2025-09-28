@@ -1,0 +1,26 @@
+{"level": "INFO", "logger": "echo_bridge", "msg": "mounted MCP http_app under /mcp_app (wrapper provides /openapi.json)"}
+INFO:     Started server process [5668]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+ERROR:    [Errno 10048] error while attempting to bind on address ('127.0.0.1', 3333): [winerror 10048] normalerweise darf jede socketadresse (protokoll, netzwerkadresse oder anschluss) nur jeweils einmal verwendet werden
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+{"level": "INFO", "logger": "echo_bridge", "msg": "mounted MCP http_app under /mcp_app (wrapper provides /openapi.json)"}
+INFO:     Started server process [19204]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:3333 (Press CTRL+C to quit)
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/bridge/link_echo_generate/echo_generate", "method": "POST", "duration_ms": 5, "outcome": "success"}
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/bridge/link_echo_generate/echo_generate", "method": "POST", "duration_ms": 1, "outcome": "success"}
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/", "method": "GET", "duration_ms": 329, "outcome": "success"}
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/favicon.svg", "method": "GET", "duration_ms": 10, "outcome": "error"}
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/favicon.png", "method": "GET", "duration_ms": 0, "outcome": "error"}
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/favicon.ico", "method": "GET", "duration_ms": 0, "outcome": "error"}
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/", "method": "POST", "duration_ms": 0, "outcome": "error"}
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/", "method": "GET", "duration_ms": 1, "outcome": "success"}
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/", "method": "GET", "duration_ms": 9, "outcome": "success"}
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/favicon.svg", "method": "GET", "duration_ms": 16, "outcome": "error"}
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/favicon.png", "method": "GET", "duration_ms": 4, "outcome": "error"}
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/favicon.ico", "method": "GET", "duration_ms": 0, "outcome": "error"}
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp", "method": "POST", "duration_ms": 0, "outcome": "error"}
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp", "method": "GET", "duration_ms": 0, "outcome": "error"}

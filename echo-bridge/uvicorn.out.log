@@ -1,0 +1,14 @@
+INFO:     127.0.0.1:56608 - "POST /bridge/link_echo_generate/echo_generate HTTP/1.1" 200 OK
+INFO:     2a02:3036:200:f98f:6487:556e:c0d6:8306:0 - "POST /bridge/link_echo_generate/echo_generate HTTP/1.1" 200 OK
+INFO:     172.213.21.124:0 - "GET / HTTP/1.1" 200 OK
+INFO:     172.213.21.122:0 - "GET /favicon.svg HTTP/1.1" 404 Not Found
+INFO:     172.213.21.122:0 - "GET /favicon.png HTTP/1.1" 404 Not Found
+INFO:     172.213.21.122:0 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     172.213.21.123:0 - "POST / HTTP/1.1" 405 Method Not Allowed
+INFO:     172.213.21.123:0 - "GET / HTTP/1.1" 200 OK
+INFO:     172.213.21.116:0 - "GET / HTTP/1.1" 200 OK
+INFO:     172.213.21.112:0 - "GET /favicon.svg HTTP/1.1" 404 Not Found
+INFO:     172.213.21.117:0 - "GET /favicon.png HTTP/1.1" 404 Not Found
+INFO:     172.213.21.123:0 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     172.213.21.124:0 - "POST /mcp HTTP/1.1" 404 Not Found
+INFO:     172.213.21.115:0 - "GET /mcp HTTP/1.1" 404 Not Found
