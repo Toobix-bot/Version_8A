@@ -1,0 +1,32 @@
+t=2025-09-28T10:21:37+0200 lvl=info msg="no configuration paths supplied"
+t=2025-09-28T10:21:37+0200 lvl=info msg="using configuration at default config path" path=C:\\Users\\micha\\AppData\\Local/ngrok/ngrok.yml
+t=2025-09-28T10:21:37+0200 lvl=info msg="open config file" path=C:\\Users\\micha\\AppData\\Local\\ngrok\\ngrok.yml err=nil
+t=2025-09-28T10:21:38+0200 lvl=info msg="starting web service" obj=web addr=127.0.0.1:4040 allow_hosts=[]
+t=2025-09-28T10:21:38+0200 lvl=info msg="client session established" obj=tunnels.session
+t=2025-09-28T10:21:38+0200 lvl=info msg="tunnel session started" obj=tunnels.session
+t=2025-09-28T10:21:39+0200 lvl=info msg="started tunnel" obj=tunnels name=command_line addr=http://localhost:3338 url=https://multiplicative-unapprehendably-marisha.ngrok-free.dev
+t=2025-09-28T10:21:39+0200 lvl=info msg="update available" obj=updater
+t=2025-09-28T10:22:12+0200 lvl=info msg="join connections" obj=join id=5cfda0dc36b0 l=127.0.0.1:3338 r=172.213.21.124:20668
+t=2025-09-28T10:22:12+0200 lvl=info msg="join connections" obj=join id=663a2e90abfa l=127.0.0.1:3338 r=172.213.21.112:35953
+t=2025-09-28T10:22:12+0200 lvl=info msg="join connections" obj=join id=96b66e052151 l=127.0.0.1:3338 r=172.213.21.115:46228
+t=2025-09-28T10:22:13+0200 lvl=info msg="join connections" obj=join id=3984a9273856 l=127.0.0.1:3338 r=172.213.21.120:1927
+t=2025-09-28T10:22:52+0200 lvl=info msg="join connections" obj=join id=30c1caf71d2e l=127.0.0.1:3338 r=172.213.21.121:17312
+t=2025-09-28T10:22:52+0200 lvl=info msg="join connections" obj=join id=6c4846c4cd1d l=127.0.0.1:3338 r=172.213.21.127:39988
+t=2025-09-28T10:22:52+0200 lvl=info msg="join connections" obj=join id=d7f049d1d844 l=127.0.0.1:3338 r=172.213.21.114:19641
+t=2025-09-28T10:22:52+0200 lvl=info msg="join connections" obj=join id=648208ff59d2 l=127.0.0.1:3338 r=172.213.21.127:31111
+t=2025-09-28T10:23:15+0200 lvl=info msg="join connections" obj=join id=920697b9d4c8 l=127.0.0.1:3338 r=172.213.21.125:50738
+t=2025-09-28T10:23:15+0200 lvl=info msg="join connections" obj=join id=979585b5289f l=127.0.0.1:3338 r=172.213.21.122:29304
+t=2025-09-28T10:23:15+0200 lvl=info msg="join connections" obj=join id=664d1fc1b5be l=127.0.0.1:3338 r=172.213.21.118:53053
+t=2025-09-28T10:23:16+0200 lvl=info msg="join connections" obj=join id=2e7e013603af l=127.0.0.1:3338 r=172.213.21.122:54913
+t=2025-09-28T10:23:28+0200 lvl=info msg="join connections" obj=join id=3350d00cf4ff l=127.0.0.1:3338 r=172.213.21.125:27104
+t=2025-09-28T10:23:28+0200 lvl=info msg="join connections" obj=join id=291eb3f0ba34 l=127.0.0.1:3338 r=172.213.21.113:41889
+t=2025-09-28T10:23:28+0200 lvl=info msg="join connections" obj=join id=2acc0f5a0999 l=127.0.0.1:3338 r=172.213.21.124:58921
+t=2025-09-28T10:23:29+0200 lvl=info msg="join connections" obj=join id=e4e816c66158 l=127.0.0.1:3338 r=172.213.21.116:42306
+t=2025-09-28T10:24:52+0200 lvl=info msg="join connections" obj=join id=a8d952e8067a l=127.0.0.1:3338 r=172.213.21.112:58557
+t=2025-09-28T10:24:53+0200 lvl=info msg="join connections" obj=join id=ed25dd2e9181 l=127.0.0.1:3338 r=172.213.21.119:23722
+t=2025-09-28T10:24:53+0200 lvl=info msg="join connections" obj=join id=f3b7d4e0366b l=127.0.0.1:3338 r=172.213.21.120:33259
+t=2025-09-28T10:24:53+0200 lvl=info msg="join connections" obj=join id=20d8caf213e6 l=127.0.0.1:3338 r=172.213.21.126:29405
+t=2025-09-28T10:30:46+0200 lvl=info msg="join connections" obj=join id=76e1ee943f68 l=127.0.0.1:3338 r=172.213.21.125:60648
+t=2025-09-28T10:30:47+0200 lvl=info msg="join connections" obj=join id=a2f1a204299e l=127.0.0.1:3338 r=172.213.21.127:38844
+t=2025-09-28T10:30:48+0200 lvl=info msg="join connections" obj=join id=5a9863eb31e6 l=127.0.0.1:3338 r=172.213.21.124:2749
+t=2025-09-28T10:30:48+0200 lvl=info msg="join connections" obj=join id=7a9505e2d507 l=127.0.0.1:3338 r=172.213.21.116:19944

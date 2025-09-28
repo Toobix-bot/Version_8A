@@ -1,0 +1,24 @@
+﻿uvicorn : {"level": "INFO", "logger": "echo_bridge", "msg": "mounted MCP http_app under /mcp_app (wrapper provides 
+/openapi.json)"}
+In Zeile:1 Zeichen:87
++ ... BUFFERED=1; uvicorn echo_bridge.main:app --host 0.0.0.0 --port 3333 - ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ({"level": "INFO...openapi.json)"}:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+INFO:     Started server process [1876]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:3333 (Press CTRL+C to quit)
+uvicorn : {"level": "INFO", "logger": "echo_bridge", "msg": "mounted MCP http_app under /mcp_app (wrapper provides 
+/openapi.json)"}
+In Zeile:1 Zeichen:87
++ ... BUFFERED=1; uvicorn echo_bridge.main:app --host 0.0.0.0 --port 3333 - ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ({"level": "INFO...openapi.json)"}:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+INFO:     Started server process [20440]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:3333 (Press CTRL+C to quit)

@@ -1,0 +1,134 @@
+﻿python.exe : {"level": "INFO", "logger": "echo_bridge", "msg": "mounted MCP http_app under /mcp_app (wrapper provides 
+/openapi.json)"}
+In Zeile:1 Zeichen:87
++ ... BUFFERED=1; & "C:\GPT\Version_8\echo-bridge\.venv\Scripts\python.exe" ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ({"level": "INFO...openapi.json)"}:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+
++----------------------------------------------------------------------------+
+|                                                                            |
+|        _ __ ___  _____           __  __  _____________    ____    ____     |
+|       _ __ ___ .'____/___ ______/ /_/  |/  / ____/ __ \  |___ \  / __ \    |
+|      _ __ ___ / /_  / __ `/ ___/ __/ /|_/ / /   / /_/ /  ___/ / / / / /    |
+|     _ __ ___ / __/ / /_/ (__  ) /_/ /  / / /___/ ____/  /  __/_/ /_/ /     |
+|    _ __ ___ /_/    \____/____/\__/_/  /_/\____/_/      /_____(*)____/      |
+|                                                                            |
+|                                                                            |
+|                                FastMCP  2.0                                |
+|                                                                            |
+|                                                                            |
+|               \U0001f5a5\ufe0f  Server name:     Echo Bridge                              |
+|               \U0001f4e6 Transport:       Streamable-HTTP                          |
+|               \U0001f517 Server URL:      http://127.0.0.1:3339/mcp                |
+|                                                                            |
+|               \U0001f3ce\ufe0f  FastMCP version: 2.12.3                                   |
+|               \U0001f91d MCP SDK version: 1.12.4                                   |
+|                                                                            |
+|               \U0001f4da Docs:            https://gofastmcp.com                    |
+|               \U0001f680 Deploy:          https://fastmcp.cloud                    |
+|                                                                            |
++----------------------------------------------------------------------------+
+
+
+[09/28/25 10:15:57] INFO     Starting MCP server 'Echo Bridge'   server.py:1572
+                             with transport 'http' on                          
+                             http://127.0.0.1:3339/mcp                         
+INFO:     Started server process [32144]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:3339 (Press CTRL+C to quit)
+INFO:     127.0.0.1:52728 - "GET /mcp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52806 - "GET /mcp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52822 - "GET /mcp HTTP/1.1" 200 OK
+python.exe : {"level": "INFO", "logger": "echo_bridge", "msg": "mounted MCP http_app under /mcp_app (wrapper provides 
+/openapi.json)"}
+In Zeile:1 Zeichen:87
++ ... BUFFERED=1; & "C:\GPT\Version_8\echo-bridge\.venv\Scripts\python.exe" ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ({"level": "INFO...openapi.json)"}:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+
++----------------------------------------------------------------------------+
+|                                                                            |
+|        _ __ ___  _____           __  __  _____________    ____    ____     |
+|       _ __ ___ .'____/___ ______/ /_/  |/  / ____/ __ \  |___ \  / __ \    |
+|      _ __ ___ / /_  / __ `/ ___/ __/ /|_/ / /   / /_/ /  ___/ / / / / /    |
+|     _ __ ___ / __/ / /_/ (__  ) /_/ /  / / /___/ ____/  /  __/_/ /_/ /     |
+|    _ __ ___ /_/    \____/____/\__/_/  /_/\____/_/      /_____(*)____/      |
+|                                                                            |
+|                                                                            |
+|                                FastMCP  2.0                                |
+|                                                                            |
+|                                                                            |
+|               \U0001f5a5\ufe0f  Server name:     Echo Bridge                              |
+|               \U0001f4e6 Transport:       Streamable-HTTP                          |
+|               \U0001f517 Server URL:      http://127.0.0.1:3339/mcp                |
+|                                                                            |
+|               \U0001f3ce\ufe0f  FastMCP version: 2.12.3                                   |
+|               \U0001f91d MCP SDK version: 1.12.4                                   |
+|                                                                            |
+|               \U0001f4da Docs:            https://gofastmcp.com                    |
+|               \U0001f680 Deploy:          https://fastmcp.cloud                    |
+|                                                                            |
++----------------------------------------------------------------------------+
+
+
+[09/28/25 10:21:43] INFO     Starting MCP server 'Echo Bridge'   server.py:1572
+                             with transport 'http' on                          
+                             http://127.0.0.1:3339/mcp                         
+INFO:     Started server process [35428]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:3339 (Press CTRL+C to quit)
+INFO:     127.0.0.1:62075 - "GET /mcp HTTP/1.1" 200 OK
+INFO:     172.213.21.124:0 - "POST /mcp HTTP/1.1" 200 OK
+Error handling request from 127.0.0.1
+Traceback (most recent call last):
+  File "C:\GPT\Version_8\echo-bridge\.venv\Lib\site-packages\aiohttp\web_protocol.py", line 510, in _handle_request
+    resp = await request_handler(request)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\GPT\Version_8\echo-bridge\.venv\Lib\site-packages\aiohttp\web_app.py", line 569, in _handle
+    return await handler(request)
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\GPT\Version_8\run_mcp_http.py", line 108, in proxy_handler
+    await sr.write(chunk)
+  File "C:\GPT\Version_8\echo-bridge\.venv\Lib\site-packages\aiohttp\web_response.py", line 560, in write
+    await self._payload_writer.write(data)
+  File "C:\GPT\Version_8\echo-bridge\.venv\Lib\site-packages\aiohttp\http_writer.py", line 202, in write
+    self._write_chunked_payload(chunk)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "C:\GPT\Version_8\echo-bridge\.venv\Lib\site-packages\aiohttp\http_writer.py", line 117, in 
+_write_chunked_payload
+    self._writelines((chunk_len_pre, chunk, b"\r\n"))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\GPT\Version_8\echo-bridge\.venv\Lib\site-packages\aiohttp\http_writer.py", line 106, in _writelines
+    raise ClientConnectionResetError("Cannot write to closing transport")
+aiohttp.client_exceptions.ClientConnectionResetError: Cannot write to closing transport
+INFO:     172.213.21.112:0 - "POST /mcp HTTP/1.1" 200 OK
+INFO:     172.213.21.115:0 - "POST /mcp HTTP/1.1" 202 Accepted
+INFO:     172.213.21.120:0 - "POST /mcp HTTP/1.1" 200 OK
+INFO:     172.213.21.121:0 - "POST /mcp HTTP/1.1" 200 OK
+INFO:     172.213.21.127:0 - "POST /mcp HTTP/1.1" 200 OK
+INFO:     172.213.21.114:0 - "POST /mcp HTTP/1.1" 202 Accepted
+INFO:     172.213.21.127:0 - "POST /mcp HTTP/1.1" 200 OK
+INFO:     172.213.21.125:0 - "POST /mcp HTTP/1.1" 200 OK
+INFO:     172.213.21.122:0 - "POST /mcp HTTP/1.1" 200 OK
+INFO:     172.213.21.118:0 - "POST /mcp HTTP/1.1" 202 Accepted
+INFO:     172.213.21.122:0 - "POST /mcp HTTP/1.1" 200 OK
+INFO:     172.213.21.125:0 - "POST /mcp HTTP/1.1" 200 OK
+INFO:     172.213.21.113:0 - "POST /mcp HTTP/1.1" 200 OK
+INFO:     172.213.21.124:0 - "POST /mcp HTTP/1.1" 202 Accepted
+INFO:     172.213.21.116:0 - "POST /mcp HTTP/1.1" 200 OK
+INFO:     172.213.21.112:0 - "POST /mcp HTTP/1.1" 200 OK
+INFO:     172.213.21.119:0 - "POST /mcp HTTP/1.1" 200 OK
+INFO:     172.213.21.120:0 - "POST /mcp HTTP/1.1" 202 Accepted
+INFO:     172.213.21.126:0 - "POST /mcp HTTP/1.1" 200 OK
+INFO:     172.213.21.125:0 - "POST /mcp HTTP/1.1" 200 OK
+INFO:     172.213.21.127:0 - "POST /mcp HTTP/1.1" 200 OK
+INFO:     172.213.21.124:0 - "POST /mcp HTTP/1.1" 202 Accepted
+INFO:     172.213.21.116:0 - "POST /mcp HTTP/1.1" 200 OK
