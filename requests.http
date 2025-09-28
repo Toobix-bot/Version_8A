@@ -1,4 +1,4 @@
-@base = https://<DEINE-TUNNEL>.trycloudflare.com
+@base = https://<DEINE-TUNNEL-DOMAIN>.trycloudflare.com
 
 ### Health
 GET {{base}}/health
@@ -27,6 +27,25 @@ Content-Type: application/json
 {
   "query": "Kern",
   "k": 3
+}
+
+### Fetch (ID aus Search einsetzen)
+POST {{base}}/fetch
+Content-Type: application/json
+
+{
+  "id": "PASTE_CHUNK_ID_HERE"
+}
+
+### Generate (optional contextIds)
+POST {{base}}/generate
+Content-Type: application/json
+
+{
+  "prompt": "Forme daraus eine Mini-Quest mit 3 Etappen.",
+  "contextIds": ["PASTE_CHUNK_ID_HERE"],
+  "temperature": 0.7,
+  "max_tokens": 400
 }
 @base = https://restored-practitioner-scanned-areas.trycloudflare.com
 

@@ -43,5 +43,10 @@
         }
       }
     }
-  }
+  },
+  "servers": [
+    {
+      "url": "https://delete-organised-gsm-posing.trycloudflare.com"
+    }
+  ]
 }
