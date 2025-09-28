@@ -133,7 +133,9 @@ class ActionResponse(BaseModel):
 
 def get_api_key(x_bridge_key: Optional[str] = Header(default=None, alias="X-Bridge-Key")) -> None:
     # Only required for write endpoints; the dependency is attached only there.
-    if not x_bridge_key or x_bridge_key != settings.bridge_key:
+    # Use ECHO_BRIDGE_API_KEY if set, otherwise fall back to API_KEY or settings.bridge_key
+    expected = os.environ.get("ECHO_BRIDGE_API_KEY") or os.environ.get("API_KEY") or settings.bridge_key
+    if not x_bridge_key or x_bridge_key != expected:
         raise HTTPException(status_code=401, detail="Missing or invalid X-Bridge-Key")
 
 
@@ -169,6 +171,49 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+def _public_read_protection_enabled() -> bool:
+    """Return True when public/read endpoints should require X-API-Key.
+
+    Controlled by the env var REQUIRE_X_API_KEY_FOR_PUBLIC. When enabled
+    the header X-API-Key must match the API_KEY env var value.
+    """
+    return os.environ.get("REQUIRE_X_API_KEY_FOR_PUBLIC", "false").lower() in ("1", "true", "yes")
+
+
+@app.middleware("http")
+async def require_api_key_for_public_reads(request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
+    """Optional middleware that enforces X-API-Key on a small set of public/read endpoints.
+
+    This avoids accidentally exposing the generated manifest/openapi or the MCP proxy
+    when the developer wants to gate them with the same API_KEY used for write endpoints.
+    """
+    try:
+        if _public_read_protection_enabled():
+            # Only guard read-style endpoints used by ChatGPT tooling
+            path = request.url.path or ""
+            guarded_prefixes = ("/public/", "/mcp")
+            guarded_exact = ("/public/openapi.json", "/public/chatgpt_tool_manifest.json", "/openapi.json", "/chatgpt_tool_manifest.json", "/mcp/openapi.json")
+            should_guard = False
+            if any(path.startswith(p) for p in guarded_prefixes) or path in guarded_exact:
+                # also allow health/debug endpoints for local inspection
+                if not path.startswith("/health") and not path.startswith("/debug"):
+                    should_guard = True
+
+            if should_guard:
+                # Use the same key resolution as get_api_key: prefer ECHO_BRIDGE_API_KEY,
+                # fall back to API_KEY, then settings.bridge_key
+                expected = os.environ.get("ECHO_BRIDGE_API_KEY") or os.environ.get("API_KEY") or settings.bridge_key
+                # If no expected key configured, treat as unlocked
+                if expected:
+                    header = request.headers.get("x-api-key") or request.headers.get("X-API-Key")
+                    if not header or header != expected:
+                        return JSONResponse(status_code=401, content={"detail": "Missing or invalid X-API-Key"})
+    except Exception:
+        # On unexpected errors, fall through to normal handling so we don't block unrelated endpoints
+        pass
+    return await call_next(request)
 public_dir = Path(__file__).resolve().parent.parent / "public"
 
 

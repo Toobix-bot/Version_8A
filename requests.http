@@ -1,3 +1,33 @@
+@base = https://<DEINE-TUNNEL>.trycloudflare.com
+
+### Health
+GET {{base}}/health
+
+### Manifest
+GET {{base}}/public/chatgpt_tool_manifest.json
+
+### OpenAPI
+GET {{base}}/public/openapi.json
+
+### Ingest
+POST {{base}}/ingest
+Content-Type: application/json
+
+{
+  "source": "local://notebook/demo",
+  "title": "ECHO-REALM: Kern",
+  "text": "Realität x Vision.",
+  "tags": ["echo","realm"]
+}
+
+### Search
+POST {{base}}/search
+Content-Type: application/json
+
+{
+  "query": "Kern",
+  "k": 3
+}
 @base = https://restored-practitioner-scanned-areas.trycloudflare.com
 
 ### Health

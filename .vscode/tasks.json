@@ -4,6 +4,26 @@
     {
       "label": "server: run",
       "type": "shell",
+      "command": "${workspaceFolder}\\.venv\\Scripts\\python -m uvicorn echo_bridge.main:app --host 127.0.0.1 --port 3333 --reload"
+    },
+    {
+      "label": "tunnel: cloudflared",
+      "type": "shell",
+      "command": ".\\cloudflared.exe tunnel --url http://127.0.0.1:3333"
+    },
+    {
+      "label": "tests: pytest",
+      "type": "shell",
+      "command": "${workspaceFolder}\\.venv\\Scripts\\python -m pytest -q"
+    }
+  ]
+}
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "server: run",
+      "type": "shell",
       "command": "${workspaceFolder}\\.venv\\Scripts\\python -m uvicorn echo_bridge.main:app --host 127.0.0.1 --port 3333 --reload",
       "group": "build",
       "problemMatcher": []

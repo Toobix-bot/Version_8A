@@ -1,0 +1,13 @@
+{
+  "schema_version": "v1",
+  "name_for_human": "ECHO Bridge",
+  "name_for_model": "echo_bridge",
+  "description_for_human": "Suchen, Abrufen, und Generieren auf deiner Wissensbasis.",
+  "description_for_model": "Tools: /ingest, /search, /fetch, /generate",
+  "auth": { "type": "none" },
+  "api": {
+    "type": "openapi",
+    "url": "https://<DEINE-TUNNEL>.trycloudflare.com/public/openapi.json",
+    "is_user_authenticated": false
+  }
+}

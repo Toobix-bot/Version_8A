@@ -2,6 +2,25 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "Run ECHO Bridge",
+      "type": "python",
+      "request": "launch",
+      "module": "uvicorn",
+      "args": [
+        "echo_bridge.main:app",
+        "--host", "127.0.0.1",
+        "--port", "3333",
+        "--reload"
+      ],
+      "envFile": "${workspaceFolder}/.env",
+      "console": "integratedTerminal"
+    }
+  ]
+}
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
       "name": "API (FastAPI)",
       "type": "python",
       "request": "launch",
