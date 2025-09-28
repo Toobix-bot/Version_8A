@@ -1,0 +1,10 @@
+@base = https://restored-practitioner-scanned-areas.trycloudflare.com
+
+### Health
+GET {{base}}/health
+
+### Manifest
+GET {{base}}/public/chatgpt_tool_manifest.json
+
+### OpenAPI
+GET {{base}}/public/openapi.json

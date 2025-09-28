@@ -1,4 +1,9 @@
 ﻿{
+  "backup": true,
+  "source": "pre-update",
+  "original": "echo-bridge/public/chatgpt_tool_manifest.json"
+}
+{
     "schema_version":  "v1",
     "name_for_human":  "ECHO Generate",
     "name_for_model":  "echo_generate",

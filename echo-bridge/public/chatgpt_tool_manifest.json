@@ -9,7 +9,7 @@
   },
   "api": {
     "type": "openapi",
-    "url": "https://tools-ready-surface-sur.trycloudflare.com/public/openapi.json",
+    "url": "https://restored-practitioner-scanned-areas.trycloudflare.com/public/openapi.json",
     "is_user_authenticated": false
   },
   "contact_email": "admin@example.com",
