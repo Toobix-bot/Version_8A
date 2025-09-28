@@ -75,13 +75,28 @@ if __name__ == "__main__":
         session_timeout = aiohttp.ClientTimeout(total=None)
         async with aiohttp.ClientSession(timeout=session_timeout) as session:
             if request.method == "GET":
-                # Stream backend response to client
+                # Try backend GET first
                 async with session.get(target_url, headers=headers) as resp:
-                    # Prepare streaming response with same content-type
-                    sr = web.StreamResponse(status=resp.status, headers={"Content-Type": resp.headers.get("Content-Type", "application/octet-stream")})
+                    backend_ct = resp.headers.get("Content-Type", "") or ""
+                    # If backend already speaks SSE, stream it through
+                    if "text/event-stream" in backend_ct:
+                        sr = web.StreamResponse(status=resp.status, headers={"Content-Type": backend_ct})
+                        await sr.prepare(request)
+                        async for chunk in resp.content.iter_chunked(1024):
+                            await sr.write(chunk)
+                        await sr.write_eof()
+                        return sr
+                    # Backend did not return SSE (likely HTML/ngrok landing). Return a small synthetic SSE handshake
+                    sr = web.StreamResponse(status=200, headers={"Content-Type": "text/event-stream"})
                     await sr.prepare(request)
-                    async for chunk in resp.content.iter_chunked(1024):
-                        await sr.write(chunk)
+                    # Send a single no-op event so clients see the SSE content-type and can proceed
+                    await sr.write(b"event: message\n")
+                    await sr.write(b"data: {}\n\n")
+                    # keep connection open briefly to behave like an SSE endpoint, then close cleanly
+                    try:
+                        await asyncio.sleep(0.25)
+                    except asyncio.CancelledError:
+                        pass
                     await sr.write_eof()
                     return sr
             else:
@@ -96,6 +111,50 @@ if __name__ == "__main__":
 
     async def start_proxy():
         app = web.Application()
+        # Health endpoint to inspect backend's OpenAPI and list registered paths/tools
+        async def health_handler(request: web.Request):
+            """Health: probe backend /mcp for SSE; if available return ok and a short snippet.
+
+            This is designed to match ChatGPT activation probes which perform a
+            GET with Accept: text/event-stream. If the backend doesn't speak SSE
+            at /mcp, we try /openapi.json as a fallback to list paths/tools.
+            """
+            backend_mcp = f"http://127.0.0.1:{backend_port}/mcp"
+            backend_openapi = f"http://127.0.0.1:{backend_port}/openapi.json"
+            timeout = aiohttp.ClientTimeout(total=5)
+            try:
+                async with aiohttp.ClientSession(timeout=timeout) as session:
+                    # First, check whether backend /mcp responds with SSE
+                    try:
+                        async with session.get(backend_mcp, headers={"Accept": "text/event-stream"}) as resp:
+                            ct = resp.headers.get("Content-Type", "") or ""
+                            if resp.status == 200 and "text/event-stream" in ct:
+                                # read a small chunk to include as snippet
+                                try:
+                                    chunk = await resp.content.read(512)
+                                    snippet = chunk.decode("utf-8", errors="replace")
+                                except Exception:
+                                    snippet = ""
+                                return web.json_response({"ok": True, "sse": True, "snippet": snippet})
+                    except Exception:
+                        # ignore and fall back to openapi
+                        pass
+
+                    # Fallback: try to fetch OpenAPI JSON to enumerate paths/tools
+                    try:
+                        async with session.get(backend_openapi) as resp2:
+                            if resp2.status == 200:
+                                j = await resp2.json()
+                                paths = sorted(list(j.get("paths", {}).keys()))
+                                return web.json_response({"ok": True, "sse": False, "paths": paths})
+                    except Exception:
+                        pass
+
+                return web.json_response({"ok": False, "error": "backend unreachable or no usable endpoint found"}, status=502)
+            except Exception as e:
+                return web.json_response({"ok": False, "error": str(e)}, status=500)
+
+        app.router.add_get('/health', health_handler)
         # catch-all route so /mcp and related paths are proxied
         app.router.add_route('*', '/{tail:.*}', proxy_handler)
         runner = web.AppRunner(app)
