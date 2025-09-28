@@ -7,7 +7,7 @@
   },
   "servers": [
     {
-      "url": "https://your-username.github.io/your-repo"
+    "url": "https://your-username.github.io/your-repo"
     }
   ],
   "paths": {

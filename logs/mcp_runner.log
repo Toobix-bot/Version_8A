@@ -336,3 +336,9 @@ INFO:     74.7.36.81:0 - "POST /mcp HTTP/1.1" 200 OK
 INFO:     74.7.36.90:0 - "POST /mcp HTTP/1.1" 200 OK
 INFO:     74.7.36.88:0 - "POST /mcp HTTP/1.1" 200 OK
 INFO:     74.7.36.88:0 - "POST /mcp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63761 - "GET /mcp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63783 - "GET /mcp/openapi.json HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:63784 - "GET /openapi.json HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:64013 - "GET /mcp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64496 - "GET /mcp HTTP/1.1" 200 OK
+INFO:     2a02:3036:200:f98f:6487:556e:c0d6:8306:0 - "GET /mcp HTTP/1.1" 200 OK

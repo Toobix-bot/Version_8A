@@ -1,5 +1,5 @@
 $ErrorActionPreference = 'Stop'
-$ngrok = 'https://multiplicative-unapprehendably-marisha.ngrok-free.dev/bridge/link_echo_generate/echo_generate'
+$ngrok = 'https://tools-ready-surface-sur.trycloudflare.com/bridge/link_echo_generate/echo_generate'
 $body = @{ prompt = 'final debug payload'; model = 'gpt-4o-mini'; max_tokens = 5 } | ConvertTo-Json -Depth 5
 $hdr = @{ 'X-API-Key' = 'SECRET' }
 try {

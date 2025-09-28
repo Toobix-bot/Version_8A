@@ -1,7 +1,7 @@
 ﻿{
   "openapi": "3.0.1",
   "info": {"title": "ECHO Bridge API", "version": "0.1.0"},
-  "servers": [{ "url": "https://multiplicative-unapprehendably-marisha.ngrok-free.dev/mcp" }],
+  "servers": [{ "url": "https://tools-ready-surface-sur.trycloudflare.com/mcp" }],
   "paths": {
     "/generate": {
       "post": {"summary": "Generate text", "responses": {"200": {"description": "OK"}}}

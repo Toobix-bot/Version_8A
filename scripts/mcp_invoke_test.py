@@ -2,7 +2,7 @@ import httpx
 import json
 
 LOCAL = 'http://127.0.0.1:3337/mcp'
-NGROK = 'https://multiplicative-unapprehendably-marisha.ngrok-free.dev/mcp'
+NGROK = 'https://tools-ready-surface-sur.trycloudflare.com/mcp'
 
 # Candidate payload shapes to try
 payloads = [

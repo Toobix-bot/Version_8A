@@ -24,7 +24,7 @@ function Do-Post($url, $bodyJson, $headers) {
     Write-Host "----------`n"
 }
 
-$ngrok = 'https://multiplicative-unapprehendably-marisha.ngrok-free.dev/bridge/link_echo_generate/echo_generate'
+$ngrok = 'https://tools-ready-surface-sur.trycloudflare.com/bridge/link_echo_generate/echo_generate'
 
 $payloads = @(
     @{ prompt = 'debug test minimal' } ,

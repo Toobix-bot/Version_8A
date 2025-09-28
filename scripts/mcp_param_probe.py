@@ -1,7 +1,7 @@
 import httpx
 
 url_local = 'http://127.0.0.1:3337/mcp'
-url_public = 'https://multiplicative-unapprehendably-marisha.ngrok-free.dev/mcp'
+url_public = 'https://tools-ready-surface-sur.trycloudflare.com/mcp'
 headers = {"Accept": "application/json, text/event-stream"}
 
 payloads = [

@@ -1,8 +1,8 @@
 $urls = @(
   'http://127.0.0.1:3333/public/chatgpt_tool_manifest.json',
   'http://127.0.0.1:3333/public/openapi.json',
-  'https://multiplicative-unapprehendably-marisha.ngrok-free.dev/public/chatgpt_tool_manifest.json',
-  'https://multiplicative-unapprehendably-marisha.ngrok-free.dev/public/openapi.json'
+  'https://tools-ready-surface-sur.trycloudflare.com/public/chatgpt_tool_manifest.json',
+  'https://tools-ready-surface-sur.trycloudflare.com/public/openapi.json'
 )
 
 foreach ($u in $urls) {

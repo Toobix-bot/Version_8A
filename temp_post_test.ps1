@@ -1,7 +1,7 @@
 $ErrorActionPreference = 'Stop'
 try {
     $body = '{"prompt":"smoke no-key"}'
-    $r = Invoke-WebRequest -Uri 'https://multiplicative-unapprehendably-marisha.ngrok-free.dev/bridge/link_echo_generate/echo_generate' -Method Post -Body $body -ContentType 'application/json' -TimeoutSec 60
+    $r = Invoke-WebRequest -Uri 'https://tools-ready-surface-sur.trycloudflare.com/bridge/link_echo_generate/echo_generate' -Method Post -Body $body -ContentType 'application/json' -TimeoutSec 60
     Write-Host 'OK no-key:'
     Write-Host $r.Content
 } catch {
@@ -10,7 +10,7 @@ try {
 
 try {
     $body2 = '{"prompt":"smoke with-key"}'
-    $r2 = Invoke-WebRequest -Uri 'https://multiplicative-unapprehendably-marisha.ngrok-free.dev/bridge/link_echo_generate/echo_generate' -Method Post -Body $body2 -ContentType 'application/json' -TimeoutSec 60 -Headers @{ 'X-API-Key' = 'SECRET' }
+    $r2 = Invoke-WebRequest -Uri 'https://tools-ready-surface-sur.trycloudflare.com/bridge/link_echo_generate/echo_generate' -Method Post -Body $body2 -ContentType 'application/json' -TimeoutSec 60 -Headers @{ 'X-API-Key' = 'SECRET' }
     Write-Host 'OK with-key:'
     Write-Host $r2.Content
 } catch {

@@ -24,14 +24,14 @@ Erwartung im Log: eine Zeile wie `Registered tool: bridge01` oder eine Liste der
 ngrok http 3337
 ```
 
-Öffentliche URL (Beispiel): `https://multiplicative-unapprehendably-marisha.ngrok-free.dev/mcp`
+Öffentliche URL (Beispiel): `https://tools-ready-surface-sur.trycloudflare.com/mcp`
 
 
 3) SSE-Handshake schnell prüfen
 
 ```bash
 curl -i -H "Accept: text/event-stream" \
-  https://multiplicative-unapprehendably-marisha.ngrok-free.dev/mcp
+  https://tools-ready-surface-sur.trycloudflare.com/mcp
 ```
 
 Gut: `200 OK` + `Content-Type: text/event-stream` (stiller Stream ist okay). 
@@ -65,7 +65,7 @@ def health():
 Prüfung:
 
 ```bash
-curl -s https://multiplicative-unapprehendably-marisha.ngrok-free.dev/health
+curl -s https://tools-ready-surface-sur.trycloudflare.com/health
 ```
 
 Siehst du `bridge01`? Wenn nein → Registrierung fehlt.
@@ -91,7 +91,7 @@ Was du mir schicken solltest:
 
 ```bash
 curl -i -H "Accept: text/event-stream" \
-  https://multiplicative-unapprehendably-marisha.ngrok-free.dev/mcp
+  https://tools-ready-surface-sur.trycloudflare.com/mcp
 ```
 
 Dann sage ich dir genau, was fehlt und gebe die minimale Code-Fix-Anweisung.
