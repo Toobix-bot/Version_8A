@@ -7,7 +7,7 @@
   },
   "servers": [
     {
-      "url": "https://multiplicative-unapprehendably-marisha.ngrok-free.dev",
+  "url": "https://multiplicative-unapprehendably-marisha.ngrok-free.dev/mcp",
       "description": "Public tunnel to your local bridge (ngrok)"
     }
   ],

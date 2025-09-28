@@ -11,7 +11,7 @@ Start MCP (background)
 # from repo root
 $log = 'C:\GPT\Version_8\mcp_server.log'
 if (Test-Path $log) { Remove-Item $log -Force }
-Start-Process -FilePath '.\.venv\Scripts\python.exe' -ArgumentList 'run_mcp_http.py','--host','127.0.0.1','--port','3337' -WorkingDirectory (Join-Path (Get-Location) 'echo-bridge') -RedirectStandardOutput $log -RedirectStandardError $log -NoNewWindow
+Start-Process -FilePath '.\.venv\Scripts\python.exe' -ArgumentList 'run_mcp_http.py','--host','0.0.0.0','--port','3337' -WorkingDirectory (Join-Path (Get-Location) 'echo-bridge') -RedirectStandardOutput $log -RedirectStandardError $log -NoNewWindow
 ```
 
 Start Bridge (background) — with API key

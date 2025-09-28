@@ -28,7 +28,7 @@ err_log = cwd / "uvicorn.err.log"
 out_f = open(out_log, "a", encoding="utf-8")
 err_f = open(err_log, "a", encoding="utf-8")
 
-cmd = [str(venv_python), "-m", "uvicorn", "echo_bridge.main:app", "--host", "127.0.0.1", "--port", "3333"]
+cmd = [str(venv_python), "-m", "uvicorn", "echo_bridge.main:app", "--host", "0.0.0.0", "--port", "3333"]
 print(f"Starting: {cmd} cwd={cwd}")
 proc = subprocess.Popen(cmd, cwd=str(cwd), env=env, stdout=out_f, stderr=err_f)
 print(f"Started pid={proc.pid}")

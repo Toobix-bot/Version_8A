@@ -1,4 +1,65 @@
-﻿{
+﻿Ja, wir kriegen’s hin. Du hast im Prinzip zwei Wege – einer davon ist sofort stabil:
+
+## Schnellster, stabiler Weg (empfohlen)
+
+**Manifest & OpenAPI statisch über GitHub Pages ausliefern, API weiter über ngrok.**
+Du hast ja already: [https://toobix-bot.github.io/Version_8A/](https://toobix-bot.github.io/Version_8A/)
+
+1. Lege im Repo **/public** so ab, dass es über Pages erreichbar ist:
+
+   * `public/chatgpt_tool_manifest.json` → `https://toobix-bot.github.io/Version_8A/public/chatgpt_tool_manifest.json`
+   * `public/openapi.json` → `https://toobix-bot.github.io/Version_8A/public/openapi.json`
+     (Pages liefert **application/json**, perfekt.)
+
+2. Verdrahten:
+
+   * In **chatgpt_tool_manifest.json**:
+     `"api": { "type": "openapi", "url": "https://toobix-bot.github.io/Version_8A/public/openapi.json" }`
+     * In **openapi.json**:
+         `"servers": [{ "url": "https://multiplicative-unapprehendably-marisha.ngrok-free.dev/mcp" }]`
+         (oder deine frische ngrok/Cloudflare-URL, unbedingt mit `/mcp`-Pfad)
+
+3. Test:
+
+   * `curl -I https://toobix-bot.github.io/Version_8A/public/chatgpt_tool_manifest.json` → **200 / application/json**
+   * `curl -I https://toobix-bot.github.io/Version_8A/public/openapi.json` → **200 / application/json**
+
+4. **Dann in ChatGPT die Manifest-URL registrieren:**
+   `https://toobix-bot.github.io/Version_8A/public/chatgpt_tool_manifest.json`
+
+Das umgeht die zickige ngrok-HTML bei GETs vollständig. Deine **POSTs** laufen ohnehin schon sauber durch den Tunnel (siehe Logs).
+
+---
+
+## Alternativ: ngrok direkt fixen
+
+Du hast noch `Forwarding … -> http://localhost:3333`. Auf Windows landet „localhost“ gerne auf **::1**, während uvicorn auf IPv4 lauscht. Fix:
+
+```powershell
+# ngrok hart auf IPv4 zeigen lassen
+taskkill /F /IM ngrok.exe /T
+ngrok http http://127.0.0.1:3333 --host-header=rewrite
+```
+
+Erwartung im ngrok-Banner:
+`Forwarding … -> http://127.0.0.1:3333` (nicht “localhost”).
+
+Dann sollten **GET /public/*** endlich in Uvicorn-Logs auftauchen und **application/json** liefern (du hast diese Routes bereits, der Warning „Duplicate Operation ID“ ist kosmetisch).
+
+---
+
+## Warum es eben noch nicht ging
+
+* ngrok zeigte auf **localhost:3333**, und für dich wurden **nur POSTs** sichtbar weitergeleitet. **GETs** zu `/public/*` landeten auf der **ngrok-Landing-HTML** (deshalb `text/html`).
+* ChatGPT braucht Manifest & OpenAPI **als JSON** – sonst kein Connector.
+
+---
+
+Wenn du jetzt kurz **einen** der Wege wählst:
+
+* **GitHub Pages** (empfohlen): poste mir die zwei Kopfzeilen (Status/CT) für die beiden Pages-URLs, dann sage ich „grün“.
+* **ngrok IPv4**: poste mir `$PUB` und die beiden Kopfzeilen für `…/public/*.json` – ich checke sofort.
+{
     "openapi":  "3.1.0",
     "info":  {
                  "title":  "ECHO Bridge API",
@@ -6,7 +67,7 @@
              },
     "servers":  [
                     {
-                        "url":  "https://multiplicative-unapprehendably-marisha.ngrok-free.dev"
+                        "url":  "https://multiplicative-unapprehendably-marisha.ngrok-free.dev/mcp"
                     }
                 ],
     "paths":  {
