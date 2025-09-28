@@ -6,6 +6,7 @@ import logging
 from pathlib import Path
 from time import perf_counter
 from typing import Any, Optional, cast, Awaitable, Callable
+from urllib.parse import urlparse, urlunparse
 
 import yaml
 from fastapi import Depends, FastAPI, Header, HTTPException, Query, Body
@@ -178,6 +179,39 @@ def _load_json_file(p: Path):
     return json.loads(txt)
 
 
+def _get_public_base_url() -> Optional[str]:
+    """Return PUBLIC_BASE_URL env var if set, otherwise None."""
+    v = os.environ.get("PUBLIC_BASE_URL")
+    if v:
+        # normalize: strip trailing slash
+        return v.rstrip("/")
+    return None
+
+
+def _replace_origin_in_string(s: str, new_origin: str) -> str:
+    try:
+        parsed = urlparse(s)
+        if parsed.scheme and parsed.netloc:
+            # keep path/query/fragment, replace scheme+netloc with new_origin
+            new_parsed = urlparse(new_origin)
+            rebuilt = urlunparse((new_parsed.scheme, new_parsed.netloc, parsed.path, parsed.params, parsed.query, parsed.fragment))
+            return rebuilt
+    except Exception:
+        pass
+    return s
+
+
+def _recursive_replace_origins(obj: Any, new_origin: str) -> Any:
+    # Recursively walk JSON-like structure and replace string origins
+    if isinstance(obj, dict):
+        return {k: _recursive_replace_origins(v, new_origin) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_recursive_replace_origins(v, new_origin) for v in obj]
+    if isinstance(obj, str):
+        return _replace_origin_in_string(obj, new_origin)
+    return obj
+
+
 @app.get("/public/openapi.json")
 def serve_openapi() -> JSONResponse:
     """Serve the public OpenAPI JSON with explicit application/json content-type."""
@@ -186,6 +220,9 @@ def serve_openapi() -> JSONResponse:
         raise HTTPException(status_code=404, detail="openapi.json not found")
     try:
         data = _load_json_file(p)
+        public = _get_public_base_url()
+        if public:
+            data = _recursive_replace_origins(data, public)
         return JSONResponse(content=data, media_type="application/json")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to read openapi.json: {e}")
@@ -199,6 +236,9 @@ def serve_manifest() -> JSONResponse:
         raise HTTPException(status_code=404, detail="chatgpt_tool_manifest.json not found")
     try:
         data = _load_json_file(p)
+        public = _get_public_base_url()
+        if public:
+            data = _recursive_replace_origins(data, public)
         return JSONResponse(content=data, media_type="application/json")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to read chatgpt manifest: {e}")
@@ -212,6 +252,9 @@ def serve_openapi_root() -> JSONResponse:
         raise HTTPException(status_code=404, detail="openapi.json not found")
     try:
         data = _load_json_file(p)
+        public = _get_public_base_url()
+        if public:
+            data = _recursive_replace_origins(data, public)
         return JSONResponse(content=data, media_type="application/json")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to read openapi.json: {e}")
@@ -225,6 +268,9 @@ def serve_manifest_root() -> JSONResponse:
         raise HTTPException(status_code=404, detail="chatgpt_tool_manifest.json not found")
     try:
         data = _load_json_file(p)
+        public = _get_public_base_url()
+        if public:
+            data = _recursive_replace_origins(data, public)
         return JSONResponse(content=data, media_type="application/json")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to read chatgpt manifest: {e}")
