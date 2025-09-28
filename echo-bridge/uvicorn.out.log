@@ -14,3 +14,9 @@ INFO:     172.213.21.124:0 - "POST /mcp HTTP/1.1" 404 Not Found
 INFO:     172.213.21.115:0 - "GET /mcp HTTP/1.1" 404 Not Found
 INFO:     127.0.0.1:57687 - "POST /bridge/link_echo_generate/echo_generate HTTP/1.1" 200 OK
 INFO:     127.0.0.1:57692 - "POST /bridge/link_echo_generate/echo_generate HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60560 - "GET /openapi.json HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60560 - "GET /public/openapi.json HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:60560 - "GET /mcp_openapi_dynamic.json HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60560 - "GET /debug/info HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60637 - "GET /debug/tools HTTP/1.1" 200 OK
+INFO:     2a02:3036:200:f98f:6487:556e:c0d6:8306:0 - "POST /bridge/link_echo_generate/echo_generate HTTP/1.1" 200 OK

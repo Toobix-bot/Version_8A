@@ -31,3 +31,16 @@ INFO:     Application startup complete.
 INFO:     Uvicorn running on http://0.0.0.0:3333 (Press CTRL+C to quit)
 {"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/bridge/link_echo_generate/echo_generate", "method": "POST", "duration_ms": 12, "outcome": "success"}
 {"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/bridge/link_echo_generate/echo_generate", "method": "POST", "duration_ms": 2, "outcome": "success"}
+{"level": "INFO", "logger": "echo_bridge", "msg": "mounted MCP http_app under /mcp_app (wrapper provides /openapi.json)"}
+INFO:     Started server process [17892]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:3333 (Press CTRL+C to quit)
+C:\GPT\Version_8\echo-bridge\.venv\Lib\site-packages\fastapi\openapi\utils.py:225: UserWarning: Duplicate Operation ID serve_openapi_public_openapi_json_get for function serve_openapi at C:\GPT\Version_8\echo-bridge\echo_bridge\main.py
+  warnings.warn(message, stacklevel=1)
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/openapi.json", "method": "GET", "duration_ms": 193, "outcome": "success"}
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/public/openapi.json", "method": "GET", "duration_ms": 8, "outcome": "error"}
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp_openapi_dynamic.json", "method": "GET", "duration_ms": 21, "outcome": "success"}
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/debug/info", "method": "GET", "duration_ms": 0, "outcome": "success"}
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/debug/tools", "method": "GET", "duration_ms": 1, "outcome": "success"}
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/bridge/link_echo_generate/echo_generate", "method": "POST", "duration_ms": 50, "outcome": "success"}

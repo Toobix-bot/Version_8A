@@ -671,6 +671,41 @@ def _build_dynamic_openapi_spec() -> dict:
     return spec
 
 
+@app.get("/debug/info")
+def debug_info() -> JSONResponse:
+    """Return runtime debug info: whether API_KEY is set (masked) and bridge key status."""
+    env_key = os.getenv("API_KEY")
+    bridge_key = settings.bridge_key
+    return JSONResponse(content={
+        "api_key_set": bool(env_key),
+        "api_key_masked": (None if not env_key else (env_key[:2] + "..." + env_key[-2:] if len(env_key) > 4 else "****")),
+        "bridge_key": (bridge_key[:2] + "..." + bridge_key[-2:] if bridge_key else None),
+    })
+
+
+@app.get("/debug/tools")
+def debug_tools() -> JSONResponse:
+    """Return a list of registered MCP tool names discovered from the FastMCP instance."""
+    try:
+        tools = []
+        for attr in ("tools", "_tools", "registered_tools", "_registry"):
+            candidate = getattr(mcp_server, attr, None)
+            if candidate:
+                if isinstance(candidate, dict):
+                    tools = list(candidate.keys())
+                elif isinstance(candidate, (list, tuple)):
+                    names = []
+                    for it in candidate:
+                        n = getattr(it, "name", None) or getattr(it, "__name__", None)
+                        if n:
+                            names.append(n)
+                    tools = names
+                break
+        return JSONResponse(content={"tools": tools})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+
 @app.get("/mcp_openapi_dynamic.json")
 def mcp_openapi_dynamic() -> JSONResponse:
     try:

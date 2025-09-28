@@ -55,3 +55,21 @@ INFO:     2a02:3036:200:f98f:6487:556e:c0d6:8306:0 - "POST /bridge/link_echo_gen
 INFO:     2a02:3036:200:f98f:6487:556e:c0d6:8306:0 - "POST /bridge/link_echo_generate/echo_generate HTTP/1.1" 401 Unauthorized
 {"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/bridge/link_echo_generate/echo_generate", 
 "method": "POST", "duration_ms": 37, "outcome": "error"}
+INFO:     2a02:3036:200:f98f:6487:556e:c0d6:8306:0 - "GET /ui HTTP/1.1" 404 Not Found
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/ui", "method": "GET", "duration_ms": 11, 
+"outcome": "error"}
+INFO:     2a02:3036:200:f98f:6487:556e:c0d6:8306:0 - "POST /bridge/link_echo_generate/echo_generate HTTP/1.1" 401 Unauthorized
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/bridge/link_echo_generate/echo_generate", 
+"method": "POST", "duration_ms": 90, "outcome": "error"}
+INFO:     127.0.0.1:49291 - "GET /debug/info HTTP/1.1" 404 Not Found
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/debug/info", "method": "GET", "duration_ms": 
+14, "outcome": "error"}
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/debug/tools", "method": "GET", "duration_ms": 
+0, "outcome": "error"}
+INFO:     127.0.0.1:49291 - "GET /debug/tools HTTP/1.1" 404 Not Found
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/debug/info", "method": "GET", "duration_ms": 0, 
+"outcome": "error"}
+INFO:     127.0.0.1:49295 - "GET /debug/info HTTP/1.1" 404 Not Found
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/debug/tools", "method": "GET", "duration_ms": 
+1, "outcome": "error"}
+INFO:     127.0.0.1:49295 - "GET /debug/tools HTTP/1.1" 404 Not Found

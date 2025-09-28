@@ -138,3 +138,6 @@ INFO:     172.213.21.126:0 - "POST /mcp HTTP/1.1" 202 Accepted
 INFO:     172.213.21.121:0 - "POST /mcp HTTP/1.1" 200 OK
 INFO:     2a02:3036:200:f98f:6487:556e:c0d6:8306:0 - "GET /ui HTTP/1.1" 404 Not Found
 INFO:     2a02:3036:200:f98f:6487:556e:c0d6:8306:0 - "POST /bridge/link_echo_generate/echo_generate HTTP/1.1" 404 Not Found
+INFO:     2a02:3036:200:f98f:6487:556e:c0d6:8306:0 - "POST /bridge/link_echo_generate/echo_generate HTTP/1.1" 404 Not Found
+INFO:     2a02:3036:200:f98f:6487:556e:c0d6:8306:0 - "POST /bridge/link_echo_generate/echo_generate HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:60724 - "GET /openapi.json HTTP/1.1" 404 Not Found
