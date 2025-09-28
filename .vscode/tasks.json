@@ -7,5 +7,41 @@
       "command": "uvicorn echo_bridge.main:app --reload --host 127.0.0.1 --port 3333",
       "options": { "env": { "PYTHONUNBUFFERED": "1" } }
     }
+    ,
+    {
+      "label": "Create venv",
+      "type": "shell",
+      "command": "python -m venv .venv",
+      "presentation": { "echo": true, "reveal": "always" }
+    },
+    {
+      "label": "Install requirements",
+      "type": "shell",
+      "command": ".venv\\Scripts\\pip.exe install -r requirements.txt",
+      "presentation": { "echo": true, "reveal": "always" }
+    },
+    {
+      "label": "Start bridge (uvicorn)",
+      "type": "shell",
+      "command": ".venv\\Scripts\\python.exe -m uvicorn echo_bridge.main:app --host 127.0.0.1 --port 3333",
+      "isBackground": true,
+      "presentation": { "echo": true, "reveal": "always" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Start ngrok (http -> 127.0.0.1:3333)",
+      "type": "shell",
+      "command": "ngrok http http://127.0.0.1:3333 --host-header=rewrite",
+      "isBackground": true,
+      "presentation": { "echo": true, "reveal": "always" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Run smoke tests",
+      "type": "shell",
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File .\\check_pages.ps1",
+      "presentation": { "echo": true, "reveal": "always" },
+      "problemMatcher": []
+    }
   ]
 }

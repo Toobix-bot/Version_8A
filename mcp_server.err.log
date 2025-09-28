@@ -1,0 +1,36 @@
+
+
++----------------------------------------------------------------------------+
+|                                                                            |
+|        _ __ ___  _____           __  __  _____________    ____    ____     |
+|       _ __ ___ .'____/___ ______/ /_/  |/  / ____/ __ \  |___ \  / __ \    |
+|      _ __ ___ / /_  / __ `/ ___/ __/ /|_/ / /   / /_/ /  ___/ / / / / /    |
+|     _ __ ___ / __/ / /_/ (__  ) /_/ /  / / /___/ ____/  /  __/_/ /_/ /     |
+|    _ __ ___ /_/    \____/____/\__/_/  /_/\____/_/      /_____(*)____/      |
+|                                                                            |
+|                                                                            |
+|                                FastMCP  2.0                                |
+|                                                                            |
+|                                                                            |
+|               \U0001f5a5\ufe0f  Server name:     Echo Bridge                              |
+|               \U0001f4e6 Transport:       Streamable-HTTP                          |
+|               \U0001f517 Server URL:      http://127.0.0.1:3337/mcp                |
+|                                                                            |
+|               \U0001f3ce\ufe0f  FastMCP version: 2.12.3                                   |
+|               \U0001f91d MCP SDK version: 1.12.4                                   |
+|                                                                            |
+|               \U0001f4da Docs:            https://gofastmcp.com                    |
+|               \U0001f680 Deploy:          https://fastmcp.cloud                    |
+|                                                                            |
++----------------------------------------------------------------------------+
+
+
+[09/28/25 08:29:04] INFO     Starting MCP server 'Echo Bridge'   server.py:1572
+                             with transport 'http' on                          
+                             http://127.0.0.1:3337/mcp                         
+INFO:     Started server process [30552]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+ERROR:    [Errno 10048] error while attempting to bind on address ('127.0.0.1', 3337): [winerror 10048] normalerweise darf jede socketadresse (protokoll, netzwerkadresse oder anschluss) nur jeweils einmal verwendet werden
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
