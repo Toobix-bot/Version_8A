@@ -16,6 +16,7 @@ from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
 import httpx
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
 try:
     # FastMCP FastAPI integration (optional)
     from fastmcp.fastapi import mount_mcp  # type: ignore
@@ -161,7 +162,34 @@ handler.setFormatter(JsonLogFormatter())
 logger.addHandler(handler)
 logger.setLevel(logging.INFO)
 
-app = FastAPI(title="ECHO-BRIDGE")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Lifespan handler: run startup tasks previously registered with
+    @app.on_event("startup"). This centralizes startup logic and is
+    the recommended modern FastAPI pattern.
+    """
+    # Run startup routines (they are defined further down in the module).
+    try:
+        try:
+            write_runtime_manifests()
+        except Exception:
+            logger.exception("write_runtime_manifests failed during startup")
+        try:
+            _on_startup_write_public_specs()
+        except Exception:
+            logger.exception("_on_startup_write_public_specs failed during startup")
+        try:
+            generate_public_specs_on_startup()
+        except Exception:
+            logger.exception("generate_public_specs_on_startup failed during startup")
+    except Exception:
+        logger.exception("unexpected error during startup lifespan")
+    # Yield to run the app; no shutdown cleanup required currently.
+    yield
+
+
+app = FastAPI(title="ECHO-BRIDGE", lifespan=lifespan)
 # Allow CORS for local testing and for ChatGPT/tool tooling. In production you
 # should restrict origins to your hosted manifest / UI origins.
 app.add_middleware(
@@ -171,6 +199,35 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+# Ensure CORS headers are present for static/public/openapi endpoints and
+# handle OPTIONS preflight for them. This complements CORSMiddleware in
+# case a reverse-proxy or static file handler omits the headers.
+@app.middleware("http")
+async def ensure_cors_for_public(request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
+    path = request.url.path or ""
+    public_prefixes = ("/public", "/openapi.json", "/chatgpt_tool_manifest.json", "/mcp")
+    should_apply = any(path.startswith(p) for p in public_prefixes)
+
+    # Fast path: respond to OPTIONS preflights for guarded public endpoints
+    if should_apply and request.method.upper() == "OPTIONS":
+        headers = {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET,POST,OPTIONS,PUT,PATCH,DELETE",
+            "Access-Control-Allow-Headers": "Authorization,Content-Type,X-API-Key,X-Bridge-Key",
+        }
+        return Response(status_code=200, headers=headers)
+
+    resp = await call_next(request)
+
+    if should_apply:
+        # Always ensure these CORS headers are present for public endpoints.
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["Access-Control-Allow-Methods"] = "GET,POST,OPTIONS,PUT,PATCH,DELETE"
+        resp.headers["Access-Control-Allow-Headers"] = "Authorization,Content-Type,X-API-Key,X-Bridge-Key"
+
+    return resp
 
 
 def _public_read_protection_enabled() -> bool:
@@ -268,7 +325,12 @@ def serve_openapi() -> JSONResponse:
         public = _get_public_base_url()
         if public:
             data = _recursive_replace_origins(data, public)
-        return JSONResponse(content=data, media_type="application/json")
+        headers = {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET,POST,OPTIONS,PUT,PATCH,DELETE",
+            "Access-Control-Allow-Headers": "Authorization,Content-Type,X-API-Key,X-Bridge-Key",
+        }
+        return JSONResponse(content=data, media_type="application/json", headers=headers)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to read openapi.json: {e}")
 
@@ -284,7 +346,12 @@ def serve_manifest() -> JSONResponse:
         public = _get_public_base_url()
         if public:
             data = _recursive_replace_origins(data, public)
-        return JSONResponse(content=data, media_type="application/json")
+        headers = {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET,POST,OPTIONS,PUT,PATCH,DELETE",
+            "Access-Control-Allow-Headers": "Authorization,Content-Type,X-API-Key,X-Bridge-Key",
+        }
+        return JSONResponse(content=data, media_type="application/json", headers=headers)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to read chatgpt manifest: {e}")
 
@@ -335,9 +402,19 @@ async def public_json_middleware(request: Request, call_next: Callable[[Request]
             if p.exists() and p.is_file():
                 try:
                     data = _load_json_file(p)
-                    return JSONResponse(content=data, media_type="application/json")
+                    headers = {
+                        "Access-Control-Allow-Origin": "*",
+                        "Access-Control-Allow-Methods": "GET,POST,OPTIONS,PUT,PATCH,DELETE",
+                        "Access-Control-Allow-Headers": "Authorization,Content-Type,X-API-Key,X-Bridge-Key",
+                    }
+                    return JSONResponse(content=data, media_type="application/json", headers=headers)
                 except Exception as e:
-                    return JSONResponse(status_code=500, content={"detail": f"Failed to read JSON: {e}"})
+                    headers = {
+                        "Access-Control-Allow-Origin": "*",
+                        "Access-Control-Allow-Methods": "GET,POST,OPTIONS,PUT,PATCH,DELETE",
+                        "Access-Control-Allow-Headers": "Authorization,Content-Type,X-API-Key,X-Bridge-Key",
+                    }
+                    return JSONResponse(status_code=500, content={"detail": f"Failed to read JSON: {e}"}, headers=headers)
     except Exception:
         # If anything goes wrong here, fall through to normal handling so we
         # don't block unrelated endpoints.
@@ -346,13 +423,142 @@ async def public_json_middleware(request: Request, call_next: Callable[[Request]
 
 
 app.mount(
-    "/public",
+    "/_public_static",
     StaticFiles(directory=str(Path(__file__).resolve().parent.parent / "public"), html=True),
-    name="public",
+    name="public_static",
 )
 
 
-@app.on_event("startup")
+@app.middleware("http")
+async def asgi_public_cors_middleware(request: Request, call_next):
+    """ASGI middleware to ensure CORS headers on /public responses and
+    to answer preflight OPTIONS requests early.
+    """
+    path = request.url.path or ""
+    # paths we care about
+    public_prefix = "/public"
+    top_openapi = "/openapi.json"
+    top_manifest = "/chatgpt_tool_manifest.json"
+
+    cors_headers = {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET,POST,OPTIONS,PUT,PATCH,DELETE",
+        "Access-Control-Allow-Headers": "Authorization,Content-Type,X-API-Key,X-Bridge-Key",
+        # allow credentials when needed
+        "Access-Control-Allow-Credentials": "true",
+    }
+
+    # Handle OPTIONS preflight for /public and top-level handlers
+    if request.method.upper() == "OPTIONS" and (
+        path.startswith(public_prefix) or path in (top_openapi, top_manifest)
+    ):
+        return Response(status_code=204, headers=cors_headers)
+
+    # Call the downstream app and then attach headers if the path matches
+    response = await call_next(request)
+    if path.startswith(public_prefix) or path in (top_openapi, top_manifest):
+        for k, v in cors_headers.items():
+            # set only if not present already
+            if k not in response.headers:
+                response.headers[k] = v
+    return response
+
+
+# Serve top-level openapi and chatgpt manifest with explicit CORS headers so
+# external clients (ChatGPT Actions) always get JSON + CORS even if the
+# StaticFiles mount bypasses middleware ordering.
+@app.get("/openapi.json")
+def serve_top_openapi() -> JSONResponse:
+    p = public_dir / "openapi.json"
+    if not p.exists():
+        # fall back to generated one
+        p = public_dir / "openapi.generated.json"
+    if not p.exists():
+        raise HTTPException(status_code=404, detail="openapi.json not found")
+    try:
+        data = _load_json_file(p)
+        headers = {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET,POST,OPTIONS,PUT,PATCH,DELETE",
+            "Access-Control-Allow-Headers": "Authorization,Content-Type,X-API-Key,X-Bridge-Key",
+        }
+        public = _get_public_base_url()
+        if public:
+            data = _recursive_replace_origins(data, public)
+        return JSONResponse(content=data, media_type="application/json", headers=headers)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to read openapi.json: {e}")
+
+
+@app.get("/chatgpt_tool_manifest.json")
+def serve_top_manifest() -> JSONResponse:
+    p = public_dir / "chatgpt_tool_manifest.json"
+    if not p.exists():
+        p = public_dir / "chatgpt_tool_manifest.generated.json"
+    if not p.exists():
+        raise HTTPException(status_code=404, detail="chatgpt_tool_manifest.json not found")
+    try:
+        data = _load_json_file(p)
+        public = _get_public_base_url()
+        if public:
+            data = _recursive_replace_origins(data, public)
+        headers = {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET,POST,OPTIONS,PUT,PATCH,DELETE",
+            "Access-Control-Allow-Headers": "Authorization,Content-Type,X-API-Key,X-Bridge-Key",
+        }
+        return JSONResponse(content=data, media_type="application/json", headers=headers)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to read chatgpt manifest: {e}")
+
+
+@app.get("/public/chatgpt_tool_manifest.json")
+def serve_public_manifest() -> JSONResponse:
+    # Serve the same content for /public/... path to override StaticFiles and guarantee CORS
+    p = public_dir / "chatgpt_tool_manifest.json"
+    if not p.exists():
+        p = public_dir / "chatgpt_tool_manifest.generated.json"
+    if not p.exists():
+        raise HTTPException(status_code=404, detail="chatgpt_tool_manifest.json not found")
+    try:
+        data = _load_json_file(p)
+        public = _get_public_base_url()
+        if public:
+            data = _recursive_replace_origins(data, public)
+        headers = {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET,POST,OPTIONS,PUT,PATCH,DELETE",
+            "Access-Control-Allow-Headers": "Authorization,Content-Type,X-API-Key,X-Bridge-Key",
+            "Access-Control-Allow-Credentials": "true",
+        }
+        return JSONResponse(content=data, media_type="application/json", headers=headers)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to read public chatgpt manifest: {e}")
+
+
+@app.get("/public/openapi.json")
+def serve_public_openapi() -> JSONResponse:
+    p = public_dir / "openapi.json"
+    if not p.exists():
+        p = public_dir / "openapi.generated.json"
+    if not p.exists():
+        raise HTTPException(status_code=404, detail="openapi.json not found")
+    try:
+        data = _load_json_file(p)
+        public = _get_public_base_url()
+        if public:
+            data = _recursive_replace_origins(data, public)
+        headers = {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET,POST,OPTIONS,PUT,PATCH,DELETE",
+            "Access-Control-Allow-Headers": "Authorization,Content-Type,X-API-Key,X-Bridge-Key",
+            "Access-Control-Allow-Credentials": "true",
+        }
+        return JSONResponse(content=data, media_type="application/json", headers=headers)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to read public openapi: {e}")
+
+
 def write_runtime_manifests() -> None:
     """Generate runtime OpenAPI and ChatGPT manifest files under public/*.generated.json.
 
@@ -992,7 +1198,6 @@ def _ensure_public_specs_written() -> None:
         logger.warning(f"failed to write manifest: {e}")
 
 
-@app.on_event("startup")
 def _on_startup_write_public_specs() -> None:
     try:
         _ensure_public_specs_written()
@@ -1000,7 +1205,6 @@ def _on_startup_write_public_specs() -> None:
         logger.warning("_ensure_public_specs_written failed: %s", e)
 
 
-@app.on_event("startup")
 def generate_public_specs_on_startup() -> None:
     """Generate or update `public/openapi.json` and ensure the chatgpt manifest is present.
 

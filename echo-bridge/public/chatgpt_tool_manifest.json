@@ -15,5 +15,5 @@
     "/resources",
     "/resources/{id}"
   ],
-  "description_for_model": " Use /resources to list or open stored chunks."
+  "description_for_model": "Use /resources to list or open stored chunks."
 }

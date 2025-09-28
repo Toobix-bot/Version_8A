@@ -2,6 +2,25 @@ Echo-Bridge — quick start (Windows)
 
 This small README gives the exact commands I used to run MCP and the Bridge on Windows for local development.
 
+## ChatGPT manifest smoke-test (free)
+
+Run the included free smoke-test to verify the public manifest/OpenAPI are reachable and CORS-enabled.
+
+PowerShell (from repo root):
+
+```powershell
+.\echo-bridge\tools\smoke_test.ps1
+```
+
+Expected: each endpoint prints Status 200 and `ACAO: *`.
+
+Import into ChatGPT → Developer Tools / Actions using the manifest URL:
+
+- https://delete-organised-gsm-posing.trycloudflare.com/chatgpt_tool_manifest.json
+- or: https://delete-organised-gsm-posing.trycloudflare.com/openapi.json
+
+Notes: the trycloudflare URL is ephemeral; if it changes, set the env var `PUBLIC_BASE_URL` and restart the bridge.
+
 Prereqs
 - Python 3.11+ and a virtualenv created in `echo-bridge/.venv`
 - From repo root: `cd echo-bridge` and create venv if needed.
@@ -119,3 +138,24 @@ Writes require the bridge key (same as API key in `config.yaml`).
 ## License
 
 MIT (project scaffold)
+
+## Named tunnel helper (cloudflared)
+
+If you want a stable public URL for ChatGPT to fetch your manifest, use a Cloudflare Tunnel.
+
+- Requirements: install `cloudflared` and authenticate it with `cloudflared login` (requires a Cloudflare account and permissions to manage DNS for the hostname you choose).
+- The repository includes a small helper to create or run a named tunnel:
+
+PowerShell (from repo root):
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\echo-bridge\tools\create_named_tunnel.ps1 -Name my-echo-tunnel -Port 3333
+```
+
+Options:
+- `-Hostname example.yourdomain.com` — create a DNS route for a stable hostname (requires Cloudflare DNS control).
+- `-RunInBackground` — start cloudflared in the background (ephemeral trycloudflare URLs may be printed in the cloudflared output).
+
+After the helper creates a hostname mapping it writes `echo-bridge/.env` with `PUBLIC_BASE_URL=https://your-hostname` for convenience. Set that environment variable when starting the bridge and restart uvicorn so the manifest/OpenAPI reference the stable public URL.
+
+Note: creating a hostname-based tunnel requires Cloudflare account access and DNS configuration. If you only need a quick ephemeral URL, the helper can start a tunnel that prints a trycloudflare URL in its output.
