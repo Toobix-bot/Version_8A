@@ -17,11 +17,11 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-Write-Host "start_ngrok_official.ps1 — looking for ngrok.exe"
+Write-Host "start_ngrok_official.ps1 - looking for ngrok.exe"
 
 # try local repo copy first
 $candidates = @(
-    Join-Path $PSScriptRoot '..\ngrok.exe' | Resolve-Path -ErrorAction SilentlyContinue,
+    "$PSScriptRoot\..\ngrok.exe",
     'ngrok.exe'
 )
 
@@ -38,7 +38,7 @@ if (-not $ngrokPath) {
     exit 2
 }
 
-Write-Host "Using ngrok: $ngrokPath"
+Write-Host ('Using ngrok: {0}' -f $ngrokPath)
 
 if ($Authtoken) {
     Write-Host 'Configuring authtoken (if necessary)'

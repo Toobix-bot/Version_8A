@@ -1,0 +1,104 @@
+{
+  "nodes": [
+    {
+      "id": "start",
+      "title": "Vor der Tür",
+      "text": {
+        "base": "Eine schlichte Tür. Dahinter: dein nächster Stand.",
+        "narrator": "Eine Schwelle. Atem, zitternd und wach.",
+        "observer": "Objekte: Tür; Variablen betroffen: mut, klarheit."
+      },
+      "choices": [
+        {
+          "id": "open",
+          "label": "Tür öffnen",
+          "to": "raum_licht",
+          "effects": { "mut": 1, "klarheit": 1 }
+        },
+        {
+          "id": "wait",
+          "label": "Noch einen Moment atmen",
+          "to": "atem",
+          "effects": { "klarheit": 2 }
+        }
+      ]
+    },
+    {
+      "id": "raum_licht",
+      "title": "Der helle Raum",
+      "text": {
+        "base": "Du trittst in ein helles Zimmer.",
+        "narrator": "Licht flutet den Raum, sanft und fordernd.",
+        "observer": "Variablen: mut+1, klarheit+1 angewandt."
+      },
+      "choices": [
+        {
+          "id": "explore",
+          "label": "Den Raum erkunden",
+          "to": "stuhl",
+          "effects": { "mut": 1 }
+        }
+      ]
+    },
+    {
+      "id": "atem",
+      "title": "Der Atemzug",
+      "text": {
+        "base": "Du atmest ein und findest Ruhe.",
+        "narrator": "Stille trägt dich.",
+        "observer": "Variablen: klarheit+2 angewandt."
+      },
+      "choices": [
+        {
+          "id": "enter",
+          "label": "Nun eintreten",
+          "to": "raum_licht",
+          "effects": { "mut": 0 }
+        }
+      ]
+    },
+    {
+      "id": "stuhl",
+      "title": "Der alte Stuhl",
+      "text": {
+        "base": "Ein alleinstehender Stuhl in der Mitte des Raumes.",
+        "narrator": "Der Stuhl scheint auf dich zu warten.",
+        "observer": "Objekt: Stuhl; Assoziationen: Erinnerung, Schmerz."
+      },
+      "choices": [
+        {
+          "id": "sit",
+          "label": "Setzen",
+          "to": "wahrheit",
+          "effects": { "klarheit": 1 }
+        },
+        {
+          "id": "leave",
+          "label": "Weitergehen",
+          "to": "raum_ende",
+          "effects": { "mut": 1 }
+        }
+      ]
+    },
+    {
+      "id": "wahrheit",
+      "title": "Die Wahrheit",
+      "text": {
+        "base": "Du sitzt. Ein Bild formt sich: alte Wunden, neue Einsicht.",
+        "narrator": "Die Wahrheit ist leise, aber unbestechlich.",
+        "observer": "Themen: Spiritualität / Schmerz / Wahrheit. Variablen aktualisiert."
+      },
+      "choices": []
+    },
+    {
+      "id": "raum_ende",
+      "title": "Der Ausgang",
+      "text": {
+        "base": "Du verlässt den Raum und spürst die Veränderung.",
+        "narrator": "Ein Schritt, und etwas ist anders.",
+        "observer": "Variablen: mut erhöht."
+      },
+      "choices": []
+    }
+  ]
+}
