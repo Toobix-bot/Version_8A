@@ -186,3 +186,30 @@ def echo_generate_tool(prompt: str, contextIds: list[str] | None = None, model: 
     sources = [{"id": c.get("id"), "title": c.get("title")} for c in contexts]
     return {"text": text, "sources": sources}
 
+
+# Emit a clear log line on import/startup listing the registered tools.
+try:
+    import logging
+
+    _logger = logging.getLogger("echo_bridge.mcp_setup")
+    # Try to introspect FastMCP for registered tools if available
+    try:
+        tool_objs = getattr(mcp, "tools", None)
+        if tool_objs:
+            names = [getattr(t, "name", str(t)) for t in tool_objs]
+        else:
+            # fallback: look for an internal mapping
+            maybe = getattr(mcp, "_tools", None) or getattr(mcp, "registered_tools", None)
+            if isinstance(maybe, dict):
+                names = list(maybe.keys())
+            else:
+                # last resort: list the tool names we know are defined above
+                names = ["search", "fetch", "list_resources", "open_resource", "echo_search", "echo_ingest", "echo_generate"]
+    except Exception:
+        names = ["search", "fetch", "list_resources", "open_resource", "echo_search", "echo_ingest", "echo_generate"]
+
+    _logger.info("Registered tools: %s", ", ".join(names))
+except Exception:
+    # don't raise on import-time logging issues
+    pass
+
