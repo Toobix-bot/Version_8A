@@ -15,12 +15,12 @@
   <body>
     <h2>Echo Bridge — quick UI</h2>
     <div class="row">
-      <label for="apiKey">X-Bridge-Key</label>
+      <label for="apiKey">X-API-Key</label>
       <input id="apiKey" placeholder="SECRET" style="width:40%" />
     </div>
     <div class="row">
       <label for="payload">Generate payload (JSON)</label>
-      <textarea id="payload">{"input":"hello world"}</textarea>
+      <textarea id="payload">{"prompt":"hello world"}</textarea>
     </div>
     <div class="row">
       <button id="send">POST /bridge/link_echo_generate/echo_generate</button>
@@ -47,7 +47,7 @@
           const payload = JSON.parse(document.getElementById('payload').value);
           const res = await fetch('/bridge/link_echo_generate/echo_generate', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-Bridge-Key': apiKeyInput.value || '' },
+            headers: { 'Content-Type': 'application/json', 'X-API-Key': apiKeyInput.value || '' },
             body: JSON.stringify(payload)
           });
           const txt = await res.text();
