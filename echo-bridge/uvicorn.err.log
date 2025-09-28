@@ -24,3 +24,10 @@ INFO:     Uvicorn running on http://127.0.0.1:3333 (Press CTRL+C to quit)
 {"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/favicon.ico", "method": "GET", "duration_ms": 0, "outcome": "error"}
 {"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp", "method": "POST", "duration_ms": 0, "outcome": "error"}
 {"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp", "method": "GET", "duration_ms": 0, "outcome": "error"}
+{"level": "INFO", "logger": "echo_bridge", "msg": "mounted MCP http_app under /mcp_app (wrapper provides /openapi.json)"}
+INFO:     Started server process [34524]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:3333 (Press CTRL+C to quit)
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/bridge/link_echo_generate/echo_generate", "method": "POST", "duration_ms": 12, "outcome": "success"}
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/bridge/link_echo_generate/echo_generate", "method": "POST", "duration_ms": 2, "outcome": "success"}
