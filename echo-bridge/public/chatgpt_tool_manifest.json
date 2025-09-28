@@ -1,17 +1,17 @@
-﻿{
-    "schema_version":  "v1",
-    "name_for_human":  "ECHO Bridge",
-    "name_for_model":  "echo_bridge",
-    "description_for_human":  "Suchen, Abrufen, und Generieren auf deiner ECHO-Wissensbasis.",
-    "description_for_model":  "Tools: /ingest, /search, /fetch, /generate (Groq-backed). Use search→fetch to build context, then call generate.",
-    "auth":  {
-                 "type":  "none"
-             },
-    "api":  {
-                "type":  "openapi",
-                "url":  "https://tools-ready-surface-sur.trycloudflare.com/public/openapi.json",
-                "is_user_authenticated":  false
-            },
-    "contact_email":  "admin@example.com",
-    "legal_info_url":  "https://toobix-bot.github.io/Version_8A/echo-bridge/legal"
+{
+  "schema_version": "v1",
+  "name_for_human": "ECHO Bridge",
+  "name_for_model": "echo_bridge",
+  "description_for_human": "Suchen, Abrufen, und Generieren auf deiner ECHO-Wissensbasis.",
+  "description_for_model": "Tools: /ingest, /search, /fetch, /generate (Groq-backed). Use search→fetch to build context, then call generate. Use /resources to list or open stored chunks.",
+  "auth": {
+    "type": "none"
+  },
+  "api": {
+    "type": "openapi",
+    "url": "https://tools-ready-surface-sur.trycloudflare.com/public/openapi.json",
+    "is_user_authenticated": false
+  },
+  "contact_email": "admin@example.com",
+  "legal_info_url": "https://toobix-bot.github.io/Version_8A/echo-bridge/legal"
 }

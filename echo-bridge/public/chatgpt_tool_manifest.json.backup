@@ -1,0 +1,5 @@
+{
+  "backup": true,
+  "source": "user-edited",
+  "note": "Backup copy of public/chatgpt_tool_manifest.json before runtime generation."
+}

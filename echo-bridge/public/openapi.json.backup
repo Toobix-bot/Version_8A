@@ -1,0 +1,5 @@
+{
+  "backup": true,
+  "source": "user-edited",
+  "note": "Backup copy of public/openapi.json before runtime generation."
+}

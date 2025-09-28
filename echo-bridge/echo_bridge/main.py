@@ -23,7 +23,7 @@ except Exception:
     mount_mcp = None  # type: ignore
 from pydantic import BaseModel
 
-from .db import init_db
+from .db import init_db, get_conn
 from .services.actions_service import ActionError, PreconditionFailed, dispatch
 from .ai.brain import Policy
 from .soul.loader import load_soul
@@ -306,6 +306,52 @@ app.mount(
     name="public",
 )
 
+
+@app.on_event("startup")
+def write_runtime_manifests() -> None:
+    """Generate runtime OpenAPI and ChatGPT manifest files under public/*.generated.json.
+
+    This function writes generated files but intentionally does not overwrite
+    the user's original files (`openapi.json`, `chatgpt_tool_manifest.json`).
+    Generated files are written as `openapi.generated.json` and
+    `chatgpt_tool_manifest.generated.json` for inspection and to help
+    automated tooling when registering the connector.
+    """
+    try:
+        pub_dir = Path(__file__).resolve().parent.parent / "public"
+        pub_dir.mkdir(parents=True, exist_ok=True)
+
+        # Build OpenAPI spec from dynamic builder
+        try:
+            spec = _build_dynamic_openapi_spec()
+            gen_openapi = pub_dir / "openapi.generated.json"
+            gen_openapi.write_text(json.dumps(spec, ensure_ascii=False, indent=2), encoding="utf-8")
+            logger.info("wrote generated openapi: %s", str(gen_openapi))
+        except Exception as e:
+            logger.warning("failed to build/write generated openapi: %s", e)
+
+        # Build a simple ChatGPT manifest that points to the public openapi route
+        try:
+            public_base = _get_public_base_url()
+            api_url = (public_base.rstrip('/') if public_base else '') + "/public/openapi.json" if public_base else "/public/openapi.json"
+            manifest = {
+                "schema_version": "v1",
+                "name_for_human": "ECHO Bridge",
+                "name_for_model": "echo_bridge",
+                "description_for_human": "Suchen, Abrufen, und Generieren auf deiner ECHO-Wissensbasis.",
+                "description_for_model": "Tools: /ingest, /search, /fetch, /generate. Use search→fetch to build context, then call generate. /resources lists stored chunks.",
+                "auth": {"type": "none"},
+                "api": {"type": "openapi", "url": api_url, "is_user_authenticated": False},
+                "contact_email": "admin@example.com",
+            }
+            gen_manifest = pub_dir / "chatgpt_tool_manifest.generated.json"
+            gen_manifest.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
+            logger.info("wrote generated manifest: %s", str(gen_manifest))
+        except Exception as e:
+            logger.warning("failed to build/write generated manifest: %s", e)
+    except Exception:
+        logger.exception("unexpected error while writing runtime manifests")
+
 # Serve a small public UI for testing and interacting with the bridge.
 static_dir = Path(__file__).resolve().parent / "static"
 if static_dir.exists():
@@ -449,6 +495,39 @@ def get_chunk_route(id: int) -> ChunkResponse:
     if not c:
         raise HTTPException(status_code=404, detail="Not found")
     return ChunkResponse(**c.model_dump())
+
+
+@app.get("/resources")
+def list_resources(q: Optional[str] = Query(default=None), limit: int = Query(default=20, ge=1, le=200)) -> Any:
+    """List stored resources (chunks).
+
+    If `q` is provided, perform a search using the existing `search()` function
+    and return matching hits. Otherwise return a simple listing of recent chunks
+    (id, title, source).
+    """
+    try:
+        if q:
+            hits = search(q, k=limit)
+            # convert Hit models to serializable dicts
+            return {"hits": [h.model_dump() for h in hits]}
+        # No query: list recent chunks from the DB
+        conn = get_conn()
+        cur = conn.cursor()
+        cur.execute("SELECT id, doc_title AS title, doc_source AS source, ts FROM chunks ORDER BY ts DESC LIMIT ?", (limit,))
+        rows = cur.fetchall()
+        items = [{"id": r["id"], "title": r["title"], "source": r["source"], "ts": r["ts"]} for r in rows]
+        return {"items": items}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/resources/{id}")
+def open_resource(id: int) -> Any:
+    """Open a resource (chunk) by id. Returns full chunk with text and meta."""
+    c = get_chunk(id)
+    if not c:
+        raise HTTPException(status_code=404, detail="Not found")
+    return c.model_dump()
 
 
 @app.get("/fs/list")
@@ -777,6 +856,177 @@ def _build_dynamic_openapi_spec() -> dict:
         spec["x-mcp-tools"] = tools
 
     return spec
+
+
+# On startup: ensure public/openapi.json and public/chatgpt_tool_manifest.json
+def _ensure_public_specs_written() -> None:
+    public_dir = Path(__file__).resolve().parent.parent / "public"
+    public_dir.mkdir(parents=True, exist_ok=True)
+    openapi_path = public_dir / "openapi.json"
+    manifest_path = public_dir / "chatgpt_tool_manifest.json"
+
+    # Load existing openapi.json or build a dynamic spec
+    try:
+        if openapi_path.exists():
+            current = _load_json_file(openapi_path)
+        else:
+            current = _build_dynamic_openapi_spec()
+    except Exception:
+        current = _build_dynamic_openapi_spec()
+
+    # Ensure servers entry if PUBLIC_BASE_URL set
+    public = _get_public_base_url()
+    if public:
+        current.setdefault("servers", [{"url": public}])
+
+    # Ensure resource paths exist (don't overwrite existing definitions)
+    paths = current.setdefault("paths", {})
+    if "/resources" not in paths:
+        paths["/resources"] = {
+            "get": {
+                "summary": "List resources (search or recent chunks)",
+                "parameters": [
+                    {"name": "q", "in": "query", "schema": {"type": "string"}, "required": False},
+                    {"name": "limit", "in": "query", "schema": {"type": "integer", "default": 20}}
+                ],
+                "responses": {"200": {"description": "OK"}}
+            }
+        }
+    if "/resources/{id}" not in paths:
+        paths["/resources/{id}"] = {
+            "get": {
+                "summary": "Open resource by id",
+                "parameters": [{"name": "id", "in": "path", "schema": {"type": "integer"}, "required": True}],
+                "responses": {"200": {"description": "OK"}, "404": {"description": "Not Found"}}
+            }
+        }
+
+    # Write openapi.json only if changed (preserve manual edits when possible)
+    try:
+        new_text = json.dumps(current, ensure_ascii=False, indent=2)
+        orig_text = openapi_path.read_text(encoding="utf-8") if openapi_path.exists() else None
+        if orig_text is None or orig_text.strip() != new_text.strip():
+            openapi_path.write_text(new_text, encoding="utf-8")
+            logger.info("wrote public/openapi.json")
+    except Exception as e:
+        logger.warning(f"failed to write openapi.json: {e}")
+
+    # Manifest: load existing manifest and only update api.url server reference if PUBLIC_BASE_URL set
+    try:
+        manifest = None
+        if manifest_path.exists():
+            manifest = _load_json_file(manifest_path)
+        else:
+            # Create a minimal manifest skeleton if none exists
+            manifest = {
+                "schema_version": "v1",
+                "name_for_human": "ECHO Bridge",
+                "name_for_model": "echo_bridge",
+                "description_for_human": "ECHO Bridge",
+                "description_for_model": "Tools: /ingest, /search, /fetch, /generate",
+                "auth": {"type": "none"},
+                "api": {"type": "openapi", "url": "./public/openapi.json", "is_user_authenticated": False},
+            }
+
+        if public:
+            # Ensure absolute URL to the public openapi
+            manifest.setdefault("api", {})
+            manifest["api"]["url"] = f"{public}/public/openapi.json"
+
+        # Ensure manifest has a brief mention of resources in model description
+        desc = manifest.get("description_for_model", "")
+        if "resources" not in desc:
+            manifest["description_for_model"] = desc + " Use /resources to list or open stored chunks."
+
+        new_manifest_text = json.dumps(manifest, ensure_ascii=False, indent=2)
+        orig_manifest_text = manifest_path.read_text(encoding="utf-8") if manifest_path.exists() else None
+        if orig_manifest_text is None or orig_manifest_text.strip() != new_manifest_text.strip():
+            manifest_path.write_text(new_manifest_text, encoding="utf-8")
+            logger.info("wrote public/chatgpt_tool_manifest.json")
+    except Exception as e:
+        logger.warning(f"failed to write manifest: {e}")
+
+
+@app.on_event("startup")
+def _on_startup_write_public_specs() -> None:
+    try:
+        _ensure_public_specs_written()
+    except Exception as e:
+        logger.warning("_ensure_public_specs_written failed: %s", e)
+
+
+@app.on_event("startup")
+def generate_public_specs_on_startup() -> None:
+    """Generate or update `public/openapi.json` and ensure the chatgpt manifest is present.
+
+    This writes a minimal OpenAPI file into the `public/` directory so external tools
+    (or tunnels serving static files) see the latest paths (including /resources).
+    The files are also still rewritten at request-time to reflect PUBLIC_BASE_URL.
+    """
+    try:
+        pubdir = Path(__file__).resolve().parent.parent / "public"
+        pubdir.mkdir(parents=True, exist_ok=True)
+
+        # Build dynamic spec (includes /generate and bridge proxy currently)
+        spec = _build_dynamic_openapi_spec()
+
+        # Add resources endpoints if not already present
+        spec_paths = spec.setdefault("paths", {})
+        spec_paths.setdefault("/resources", {
+            "get": {
+                "summary": "List resources (search or recent chunks)",
+                "parameters": [
+                    {"name": "q", "in": "query", "schema": {"type": "string"}, "required": False},
+                    {"name": "limit", "in": "query", "schema": {"type": "integer", "default": 20}},
+                ],
+                "responses": {"200": {"description": "OK"}},
+            }
+        })
+        spec_paths.setdefault("/resources/{id}", {
+            "get": {
+                "summary": "Open resource by id",
+                "parameters": [{"name": "id", "in": "path", "schema": {"type": "integer"}, "required": True}],
+                "responses": {"200": {"description": "OK"}, "404": {"description": "Not Found"}},
+            }
+        })
+
+        openapi_path = pubdir / "openapi.json"
+        with open(openapi_path, "w", encoding="utf-8") as f:
+            json.dump(spec, f, ensure_ascii=False, indent=2)
+
+        # Ensure a chatgpt manifest exists; if present, try to augment tool list
+        manifest_path = pubdir / "chatgpt_tool_manifest.json"
+        if manifest_path.exists():
+            try:
+                mf = _load_json_file(manifest_path)
+                # If the manifest contains a `tools` or `endpoints` area, add a note
+                # We avoid overwriting user fields; just ensure the file exists and is valid JSON.
+                with open(manifest_path, "w", encoding="utf-8") as f:
+                    json.dump(mf, f, ensure_ascii=False, indent=2)
+            except Exception:
+                # if the manifest is invalid, rewrite a minimal placeholder
+                mf = {
+                    "schema_version": "v1",
+                    "name_for_human": "ECHO Bridge (generated)",
+                    "description_for_human": "ECHO bridge exposing generate and resources endpoints.",
+                    "auth": {"type": "none"},
+                    "endpoints": ["/generate", "/resources", "/resources/{id}"]
+                }
+                with open(manifest_path, "w", encoding="utf-8") as f:
+                    json.dump(mf, f, ensure_ascii=False, indent=2)
+        else:
+            # write a minimal manifest so dev tooling can see something
+            mf = {
+                "schema_version": "v1",
+                "name_for_human": "ECHO Bridge (generated)",
+                "description_for_human": "ECHO bridge exposing generate and resources endpoints.",
+                "auth": {"type": "none"},
+                "endpoints": ["/generate", "/resources", "/resources/{id}"]
+            }
+            with open(manifest_path, "w", encoding="utf-8") as f:
+                json.dump(mf, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        logger.warning(f"generate_public_specs_on_startup: failed to write public specs: {e}")
 
 
 @app.get("/debug/manifest_url")

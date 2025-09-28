@@ -1,0 +1,47 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "ECHO Bridge MCP (dynamic)",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/generate": {
+      "post": {
+        "summary": "Generate text (internal)",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/bridge/link_echo_generate/echo_generate": {
+      "post": {
+        "summary": "Bridge proxy for echo_generate tool",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    }
+  }
+}

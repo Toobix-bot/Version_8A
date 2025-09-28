@@ -1,15 +1,98 @@
-﻿{
+{
   "openapi": "3.0.1",
-  "info": {"title": "ECHO Bridge API", "version": "0.1.0"},
-  "servers": [{ "url": "https://tools-ready-surface-sur.trycloudflare.com/mcp" }],
+  "info": {
+    "title": "ECHO Bridge MCP (dynamic)",
+    "version": "0.1.0"
+  },
   "paths": {
     "/generate": {
-      "post": {"summary": "Generate text", "responses": {"200": {"description": "OK"}}}
+      "post": {
+        "summary": "Generate text (internal)",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
     },
     "/bridge/link_echo_generate/echo_generate": {
-      "post": {"summary": "Bridge echo_generate proxy", "responses": {"200": {"description": "OK"}}}
+      "post": {
+        "summary": "Bridge proxy for echo_generate tool",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/resources": {
+      "get": {
+        "summary": "List resources (search or recent chunks)",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "required": false
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/resources/{id}": {
+      "get": {
+        "summary": "Open resource by id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "integer"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
     }
   }
 }
- 
-
