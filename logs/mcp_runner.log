@@ -141,3 +141,192 @@ INFO:     2a02:3036:200:f98f:6487:556e:c0d6:8306:0 - "POST /bridge/link_echo_gen
 INFO:     2a02:3036:200:f98f:6487:556e:c0d6:8306:0 - "POST /bridge/link_echo_generate/echo_generate HTTP/1.1" 404 Not Found
 INFO:     2a02:3036:200:f98f:6487:556e:c0d6:8306:0 - "POST /bridge/link_echo_generate/echo_generate HTTP/1.1" 404 Not Found
 INFO:     127.0.0.1:60724 - "GET /openapi.json HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:60817 - "GET /openapi.json HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:60825 - "GET /openapi.json HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:60856 - "GET /openapi.json HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:60857 - "GET /mcp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60860 - "GET /openapi.json HTTP/1.1" 404 Not Found
+INFO:     2a02:3036:200:f98f:6487:556e:c0d6:8306:0 - "POST /bridge/link_echo_generate/echo_generate HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:60957 - "GET /openapi.json HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:60958 - "GET /mcp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60961 - "GET /openapi.json HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:60962 - "GET /openapi.json HTTP/1.1" 404 Not Found
+INFO:     2a02:3036:200:f98f:6487:556e:c0d6:8306:0 - "POST /bridge/link_echo_generate/echo_generate HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:60966 - "GET /openapi.json HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:60967 - "GET /mcp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60974 - "GET /openapi.json HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:60983 - "GET /openapi.json HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:60984 - "GET /mcp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60988 - "GET /openapi.json HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:61160 - "GET /mcp/openapi.json HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:61161 - "GET /openapi.json HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:61162 - "GET /mcp HTTP/1.1" 406 Not Acceptable
+ERROR:mcp.server.streamable_http:Error in message router
+Traceback (most recent call last):
+  File "C:\GPT\Version_8\echo-bridge\.venv\Lib\site-packages\mcp\server\streamable_http.py", line 831, in 
+message_router
+    async for session_message in write_stream_reader:
+    ...<46 lines>...
+            )
+  File "C:\GPT\Version_8\echo-bridge\.venv\Lib\site-packages\anyio\abc\_streams.py", line 41, in __anext__
+    return await self.receive()
+           ^^^^^^^^^^^^^^^^^^^^
+  File "C:\GPT\Version_8\echo-bridge\.venv\Lib\site-packages\anyio\streams\memory.py", line 111, in receive
+    return self.receive_nowait()
+           ~~~~~~~~~~~~~~~~~~~^^
+  File "C:\GPT\Version_8\echo-bridge\.venv\Lib\site-packages\anyio\streams\memory.py", line 93, in receive_nowait
+    raise ClosedResourceError
+anyio.ClosedResourceError
+INFO:     127.0.0.1:61163 - "GET /mcp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61166 - "GET /mcp/openapi.json HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:61167 - "GET /openapi.json HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:61168 - "GET /openapi.json HTTP/1.1" 404 Not Found
+INFO:     2a02:3036:200:f98f:6487:556e:c0d6:8306:0 - "POST /bridge/link_echo_generate/echo_generate HTTP/1.1" 404 Not Found
+python.exe : {"level": "INFO", "logger": "echo_bridge", "msg": "mounted MCP http_app under /mcp_app (wrapper provides 
+/openapi.json)"}
+In Zeile:1 Zeichen:87
++ ... BUFFERED=1; & "C:\GPT\Version_8\echo-bridge\.venv\Scripts\python.exe" ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ({"level": "INFO...openapi.json)"}:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+
++----------------------------------------------------------------------------+
+|                                                                            |
+|        _ __ ___  _____           __  __  _____________    ____    ____     |
+|       _ __ ___ .'____/___ ______/ /_/  |/  / ____/ __ \  |___ \  / __ \    |
+|      _ __ ___ / /_  / __ `/ ___/ __/ /|_/ / /   / /_/ /  ___/ / / / / /    |
+|     _ __ ___ / __/ / /_/ (__  ) /_/ /  / / /___/ ____/  /  __/_/ /_/ /     |
+|    _ __ ___ /_/    \____/____/\__/_/  /_/\____/_/      /_____(*)____/      |
+|                                                                            |
+|                                                                            |
+|                                FastMCP  2.0                                |
+|                                                                            |
+|                                                                            |
+|               \U0001f5a5\ufe0f  Server name:     Echo Bridge                              |
+|               \U0001f4e6 Transport:       Streamable-HTTP                          |
+|               \U0001f517 Server URL:      http://127.0.0.1:3339/mcp                |
+|                                                                            |
+|               \U0001f3ce\ufe0f  FastMCP version: 2.12.3                                   |
+|               \U0001f91d MCP SDK version: 1.12.4                                   |
+|                                                                            |
+|               \U0001f4da Docs:            https://gofastmcp.com                    |
+|               \U0001f680 Deploy:          https://fastmcp.cloud                    |
+|                                                                            |
++----------------------------------------------------------------------------+
+
+
+[09/28/25 11:44:18] INFO     Starting MCP server 'Echo Bridge'   server.py:1572
+                             with transport 'http' on                          
+                             http://127.0.0.1:3339/mcp                         
+INFO:     Started server process [35572]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:3339 (Press CTRL+C to quit)
+python.exe : {"level": "INFO", "logger": "echo_bridge", "msg": "mounted MCP http_app under /mcp_app (wrapper provides 
+/openapi.json)"}
+In Zeile:1 Zeichen:87
++ ... BUFFERED=1; & "C:\GPT\Version_8\echo-bridge\.venv\Scripts\python.exe" ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ({"level": "INFO...openapi.json)"}:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+
++----------------------------------------------------------------------------+
+|                                                                            |
+|        _ __ ___  _____           __  __  _____________    ____    ____     |
+|       _ __ ___ .'____/___ ______/ /_/  |/  / ____/ __ \  |___ \  / __ \    |
+|      _ __ ___ / /_  / __ `/ ___/ __/ /|_/ / /   / /_/ /  ___/ / / / / /    |
+|     _ __ ___ / __/ / /_/ (__  ) /_/ /  / / /___/ ____/  /  __/_/ /_/ /     |
+|    _ __ ___ /_/    \____/____/\__/_/  /_/\____/_/      /_____(*)____/      |
+|                                                                            |
+|                                                                            |
+|                                FastMCP  2.0                                |
+|                                                                            |
+|                                                                            |
+|               \U0001f5a5\ufe0f  Server name:     Echo Bridge                              |
+|               \U0001f4e6 Transport:       Streamable-HTTP                          |
+|               \U0001f517 Server URL:      http://127.0.0.1:3339/mcp                |
+|                                                                            |
+|               \U0001f3ce\ufe0f  FastMCP version: 2.12.3                                   |
+|               \U0001f91d MCP SDK version: 1.12.4                                   |
+|                                                                            |
+|               \U0001f4da Docs:            https://gofastmcp.com                    |
+|               \U0001f680 Deploy:          https://fastmcp.cloud                    |
+|                                                                            |
++----------------------------------------------------------------------------+
+
+
+[09/28/25 11:44:31] INFO     Starting MCP server 'Echo Bridge'   server.py:1572
+                             with transport 'http' on                          
+                             http://127.0.0.1:3339/mcp                         
+INFO:     Started server process [3776]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:3339 (Press CTRL+C to quit)
+INFO:     4.234.83.100:0 - "POST /mcp HTTP/1.1" 200 OK
+Exception in callback _ProactorBasePipeTransport._call_connection_lost()
+handle: <Handle _ProactorBasePipeTransport._call_connection_lost()>
+Traceback (most recent call last):
+  File "C:\Users\micha\AppData\Local\Programs\Python\Python313\Lib\asyncio\events.py", line 89, in _run
+    self._context.run(self._callback, *self._args)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\micha\AppData\Local\Programs\Python\Python313\Lib\asyncio\proactor_events.py", line 165, in 
+_call_connection_lost
+    self._sock.shutdown(socket.SHUT_RDWR)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [WinError 10054] Eine vorhandene Verbindung wurde vom Remotehost geschlossen
+INFO:     4.234.83.110:0 - "POST /mcp HTTP/1.1" 200 OK
+Exception in callback _ProactorBasePipeTransport._call_connection_lost()
+handle: <Handle _ProactorBasePipeTransport._call_connection_lost()>
+Traceback (most recent call last):
+  File "C:\Users\micha\AppData\Local\Programs\Python\Python313\Lib\asyncio\events.py", line 89, in _run
+    self._context.run(self._callback, *self._args)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\micha\AppData\Local\Programs\Python\Python313\Lib\asyncio\proactor_events.py", line 165, in 
+_call_connection_lost
+    self._sock.shutdown(socket.SHUT_RDWR)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [WinError 10054] Eine vorhandene Verbindung wurde vom Remotehost geschlossen
+INFO:     4.234.83.104:0 - "POST /mcp HTTP/1.1" 200 OK
+INFO:     4.234.83.111:0 - "POST /mcp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63872 - "GET /mcp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63979 - "GET /mcp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63995 - "GET /mcp HTTP/1.1" 200 OK
+INFO:     4.234.83.106:0 - "POST /mcp HTTP/1.1" 200 OK
+INFO:     4.234.83.97:0 - "POST /mcp HTTP/1.1" 200 OK
+INFO:     4.234.83.109:0 - "POST /mcp HTTP/1.1" 200 OK
+INFO:     4.234.83.108:0 - "POST /mcp HTTP/1.1" 200 OK
+INFO:     4.234.83.104:0 - "POST /mcp HTTP/1.1" 200 OK
+INFO:     4.234.83.111:0 - "POST /mcp HTTP/1.1" 200 OK
+Exception in callback _ProactorBasePipeTransport._call_connection_lost()
+handle: <Handle _ProactorBasePipeTransport._call_connection_lost()>
+Traceback (most recent call last):
+  File "C:\Users\micha\AppData\Local\Programs\Python\Python313\Lib\asyncio\events.py", line 89, in _run
+    self._context.run(self._callback, *self._args)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\micha\AppData\Local\Programs\Python\Python313\Lib\asyncio\proactor_events.py", line 165, in 
+_call_connection_lost
+    self._sock.shutdown(socket.SHUT_RDWR)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [WinError 10054] Eine vorhandene Verbindung wurde vom Remotehost geschlossen
+INFO:     127.0.0.1:60983 - "GET /mcp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61917 - "GET /mcp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61919 - "GET /mcp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61920 - "GET /mcp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61921 - "GET /mcp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61923 - "GET /mcp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61927 - "GET /mcp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61928 - "GET /mcp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61930 - "GET /mcp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61931 - "GET /mcp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61933 - "GET /mcp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61965 - "GET /mcp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61982 - "GET /mcp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61985 - "GET /mcp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61987 - "GET /mcp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61990 - "GET /mcp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61998 - "GET /mcp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62014 - "GET /mcp HTTP/1.1" 200 OK

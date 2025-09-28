@@ -1,1 +1,29 @@
-﻿{"schema_version":"v1","name_for_human":"ECHO Bridge","name_for_model":"echo_bridge","description_for_human":"Suchen, Abrufen, und Generieren auf deiner ECHO-Wissensbasis.","description_for_model":"Tools: /ingest, /search, /fetch, /generate (Groq-backed). Use searchfetch to build context, then call generate.","auth":{"type":"none"},"api":{"type":"openapi","url":"https://toobix-bot.github.io/Version_8A/openapi.json","is_user_authenticated":false},"contact_email":"admin@example.com","legal_info_url":"https://toobix-bot.github.io/Version_8A/legal"}
+﻿{
+  "schema_version": "v1",
+  "name_for_model": "echo_bridge",
+  "name_for_human": "Echo Bridge (dev)",
+  "description_for_human": "A developer-only echo connector for testing MCP activation.",
+  "auth": {
+    "type": "none"
+  },
+  "api": {
+    "type": "openapi",
+    "url": "./openapi.json",
+    "is_user_authenticated": false
+  }
+}
+{
+  "schema_version": "v1",
+  "name_for_model": "echo_bridge",
+  "name_for_human": "Echo Bridge (dev)",
+  "description_for_human": "A developer-only echo connector for testing MCP activation.",
+  "auth": {
+    "type": "none"
+  },
+  "api": {
+    "type": "openapi",
+    "url": "./openapi.json",
+    "is_user_authenticated": false
+  }
+}
+{"schema_version":"v1","name_for_human":"ECHO Bridge","name_for_model":"echo_bridge","description_for_human":"Suchen, Abrufen, und Generieren auf deiner ECHO-Wissensbasis.","description_for_model":"Tools: /ingest, /search, /fetch, /generate (Groq-backed). Use searchfetch to build context, then call generate.","auth":{"type":"none"},"api":{"type":"openapi","url":"https://toobix-bot.github.io/Version_8A/openapi.json","is_user_authenticated":false},"contact_email":"admin@example.com","legal_info_url":"https://toobix-bot.github.io/Version_8A/legal"}

@@ -44,3 +44,40 @@ C:\GPT\Version_8\echo-bridge\.venv\Lib\site-packages\fastapi\openapi\utils.py:22
 {"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/debug/info", "method": "GET", "duration_ms": 0, "outcome": "success"}
 {"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/debug/tools", "method": "GET", "duration_ms": 1, "outcome": "success"}
 {"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/bridge/link_echo_generate/echo_generate", "method": "POST", "duration_ms": 50, "outcome": "success"}
+{"level": "INFO", "logger": "echo_bridge", "msg": "mounted MCP http_app under /mcp_app (wrapper provides /openapi.json)"}
+INFO:     Started server process [32744]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:3333 (Press CTRL+C to quit)
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/debug/backend_openapi", "method": "GET", "duration_ms": 84, "outcome": "error"}
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/debug/backend_health", "method": "GET", "duration_ms": 3133, "outcome": "error"}
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/debug/backend_openapi", "method": "GET", "duration_ms": 93, "outcome": "error"}
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/debug/backend_health", "method": "GET", "duration_ms": 3132, "outcome": "error"}
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/debug/backend_openapi", "method": "GET", "duration_ms": 4, "outcome": "error"}
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/debug/backend_health", "method": "GET", "duration_ms": 3030, "outcome": "error"}
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/debug/backend_openapi", "method": "GET", "duration_ms": 4, "outcome": "error"}
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/debug/backend_health", "method": "GET", "duration_ms": 3035, "outcome": "error"}
+{"level": "INFO", "logger": "echo_bridge", "msg": "mounted MCP http_app under /mcp_app (wrapper provides /openapi.json)"}
+INFO:     Started server process [13284]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:3333 (Press CTRL+C to quit)
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/debug/backend_openapi", "method": "GET", "duration_ms": 397, "outcome": "error"}
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/debug/backend_health", "method": "GET", "duration_ms": 3203, "outcome": "error"}
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/bridge/link_echo_generate/echo_generate", "method": "POST", "duration_ms": 220, "outcome": "success"}
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/public/openapi.json", "method": "GET", "duration_ms": 16, "outcome": "error"}
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp", "method": "GET", "duration_ms": 3, "outcome": "error"}
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/ui", "method": "GET", "duration_ms": 4, "outcome": "success"}
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/public/openapi.json", "method": "GET", "duration_ms": 1, "outcome": "error"}
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp", "method": "GET", "duration_ms": 0, "outcome": "error"}
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/ui", "method": "GET", "duration_ms": 1, "outcome": "success"}
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/public/openapi.json", "method": "GET", "duration_ms": 0, "outcome": "error"}
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/public/openapi.json", "method": "GET", "duration_ms": 1, "outcome": "error"}
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp", "method": "GET", "duration_ms": 0, "outcome": "error"}
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/ui", "method": "GET", "duration_ms": 2, "outcome": "success"}
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/bridge/link_echo_generate/echo_generate", "method": "POST", "duration_ms": 1, "outcome": "success"}
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/public/openapi.json", "method": "GET", "duration_ms": 10, "outcome": "error"}
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp/openapi.json", "method": "GET", "duration_ms": 16, "outcome": "success"}
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp", "method": "GET", "duration_ms": 2, "outcome": "error"}
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp_app/openapi.json", "method": "GET", "duration_ms": 73, "outcome": "success"}
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/public/mcp_openapi.json", "method": "GET", "duration_ms": 1, "outcome": "success"}

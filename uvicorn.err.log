@@ -1,9 +1,11 @@
 {"level": "INFO", "logger": "echo_bridge", "msg": "mounted MCP http_app under /mcp_app (wrapper provides /openapi.json)"}
-INFO:     Started server process [16588]
+INFO:     Started server process [23944]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
-INFO:     Uvicorn running on http://127.0.0.1:3333 (Press CTRL+C to quit)
-{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/bridge/link_echo_generate/echo_generate", "method": "POST", "duration_ms": 93, "outcome": "error"}
-{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/bridge/link_echo_generate/echo_generate", "method": "POST", "duration_ms": 37, "outcome": "error"}
-{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/bridge/link_echo_generate/echo_generate", "method": "POST", "duration_ms": 19, "outcome": "error"}
-{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/bridge/link_echo_generate/echo_generate", "method": "POST", "duration_ms": 16, "outcome": "error"}
+INFO:     Uvicorn running on http://0.0.0.0:3333 (Press CTRL+C to quit)
+C:\GPT\Version_8\echo-bridge\.venv\Lib\site-packages\httpx\_models.py:408: DeprecationWarning: Use 'content=<...>' to upload raw bytes/text content.
+  headers, stream = encode_request(
+{"level": "INFO", "logger": "echo_bridge", "msg": "mcp proxy: backend stream closed"}
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp", "method": "POST", "duration_ms": 620, "outcome": "success"}
+{"level": "INFO", "logger": "echo_bridge", "msg": "mcp proxy: backend stream closed"}
+{"level": "INFO", "logger": "echo_bridge", "msg": "request", "path": "/mcp", "method": "POST", "duration_ms": 469, "outcome": "success"}

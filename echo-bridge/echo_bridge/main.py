@@ -11,7 +11,8 @@ import yaml
 from fastapi import Depends, FastAPI, Header, HTTPException, Query, Body
 from fastapi import Request
 from starlette.responses import Response
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
+import httpx
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 try:
@@ -501,7 +502,8 @@ def bridge_echo_generate(
     """
     # Optional API key guard (useful if the bridge should authenticate callers)
     env_key = os.getenv("API_KEY")
-    if env_key:
+    allow_unauth = os.environ.get("ALLOW_UNAUTH_BRIDGE", "false").lower() in ("1", "true", "yes")
+    if env_key and not allow_unauth:
         if not x_api_key or x_api_key != env_key:
             raise HTTPException(status_code=401, detail="Missing or invalid X-API-Key")
 
@@ -602,27 +604,82 @@ def mcp_openapi() -> JSONResponse:
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to build dynamic openapi spec: {e}")
 
-    # Convenience: serve the static MCP openapi at the /mcp root so external
-    # registrars that probe the base path (e.g., GET /mcp) get a JSON response
-    # instead of a 404 or the app's index page. This helps tunnels that sometimes
-    # rewrite base paths and makes ChatGPT registration more reliable.
-    @app.get("/mcp")
-    @app.get("/mcp/")
-    def mcp_root() -> JSONResponse:
-        public_dir = Path(__file__).resolve().parent.parent / "public"
-        openapi_path = public_dir / "mcp_openapi.json"
-        if openapi_path.exists():
-            try:
-                data = _load_json_file(openapi_path)
-                return JSONResponse(content=data, media_type="application/json")
-            except Exception as e:
-                raise HTTPException(status_code=500, detail=f"Failed to load mcp openapi: {e}")
-        # Fallback: return the dynamic spec so callers still see a valid JSON
+
+# Proxy endpoints for MCP so the bridge can serve /mcp and /mcp/openapi.json on the
+# same public origin. This helps ChatGPT Developer Tools register and connect.
+def _backend_mcp_base() -> str:
+    # Allow overriding via env var for tests; default to the run_mcp_http backend.
+    return os.environ.get("MCP_BACKEND_URL", "http://127.0.0.1:3339")
+
+
+@app.get("/mcp/openapi.json")
+def proxy_mcp_openapi() -> Response:
+    backend = _backend_mcp_base()
+    candidates = [f"{backend}/mcp/openapi.json", f"{backend}/openapi.json", f"{backend}/mcp"]
+    for url in candidates:
         try:
-            spec = _build_dynamic_openapi_spec()
-            return JSONResponse(content=spec, media_type="application/json")
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Failed to build dynamic mcp openapi: {e}")
+            r = httpx.get(url, timeout=3.0)
+            if r.status_code == 200:
+                ctype = r.headers.get("content-type", "")
+                # If JSON, return it as application/json
+                if "application/json" in ctype or url.endswith("openapi.json"):
+                    return Response(content=r.content, media_type="application/json")
+                # Otherwise return as text for inspection
+                return Response(content=r.text, media_type="text/plain")
+        except Exception:
+            continue
+    # Fallback to internal dynamic spec
+    try:
+        spec = _build_dynamic_openapi_spec()
+        return JSONResponse(content=spec, media_type="application/json")
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"failed to fetch backend openapi: {e}")
+
+
+@app.api_route("/mcp", methods=["GET", "POST"])
+@app.api_route("/mcp/", methods=["GET", "POST"])
+async def proxy_mcp_stream(request: Request):
+    backend = _backend_mcp_base()
+    url = f"{backend}/mcp"
+    # Copy most headers; ensure Host is backend host
+    headers = {k: v for k, v in request.headers.items()}
+    # Ensure Host header targets the backend host (keep port if present)
+    try:
+        from urllib.parse import urlparse
+
+        parsed = urlparse(backend)
+        host_hdr = parsed.netloc or parsed.hostname or "127.0.0.1"
+        headers["host"] = host_hdr
+    except Exception:
+        headers["host"] = "127.0.0.1"
+    method = request.method.upper()
+    try:
+        async with httpx.AsyncClient(timeout=None) as client:
+            # Use same method as incoming request (GET for SSE, POST for session creation)
+            async with client.stream(method, url, headers=headers, data=await request.body()) as resp:
+                status = resp.status_code
+                content_type = resp.headers.get("content-type", "text/event-stream")
+                async def event_generator():
+                    try:
+                        async for chunk in resp.aiter_bytes():
+                            if chunk:
+                                yield chunk
+                    except httpx.StreamClosed:
+                        # Backend closed the stream; end generator cleanly
+                        logger.info("mcp proxy: backend stream closed")
+                        return
+                    except Exception as e:
+                        logger.warning("mcp proxy: stream error: %s", e)
+                        return
+                    finally:
+                        try:
+                            await resp.aclose()
+                        except Exception:
+                            pass
+
+                return StreamingResponse(event_generator(), status_code=status, media_type=content_type)
+    except httpx.RequestError as e:
+        raise HTTPException(status_code=502, detail=f"backend mcp proxy error: {e}")
         
 
 
@@ -704,6 +761,85 @@ def debug_tools() -> JSONResponse:
         return JSONResponse(content={"tools": tools})
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
+
+
+@app.get("/debug/backend_openapi")
+def debug_backend_openapi() -> JSONResponse:
+    """Proxy the backend FastMCP openapi.json (127.0.0.1:3339) so callers can inspect registered tools.
+    This avoids introspecting the in-process object which may be empty when the backend runs in a separate process.
+    """
+    import urllib.request
+    import json as _json
+
+    # Try several likely backend OpenAPI locations in order of preference.
+    candidates = [
+        "http://127.0.0.1:3339/mcp/openapi.json",
+        "http://127.0.0.1:3339/openapi.json",
+        "http://127.0.0.1:3339/mcp",
+    ]
+    for backend_url in candidates:
+        try:
+            req = urllib.request.Request(backend_url, headers={"Accept": "application/json"})
+            with urllib.request.urlopen(req, timeout=4) as resp:
+                data = resp.read()
+                # If the response looks like JSON, decode and return it
+                try:
+                    j = _json.loads(data)
+                    return JSONResponse(content={"url": backend_url, "json": j})
+                except Exception:
+                    # If it's not JSON, return raw text for inspection
+                    return JSONResponse(content={"url": backend_url, "raw": data.decode("utf-8", errors="replace")})
+        except Exception:
+            # Try next candidate
+            continue
+    return JSONResponse(status_code=502, content={"error": "backend openapi unreachable (tried candidates)", "candidates": candidates})
+
+
+@app.get("/debug/backend_health")
+def debug_backend_health() -> JSONResponse:
+    """Probe backend /mcp with Accept: text/event-stream and fall back to backend openapi.json.
+    Returns a small snippet or the openapi paths for inspection.
+    """
+    import urllib.request
+    import json as _json
+
+    backend_mcp = "http://127.0.0.1:3339/mcp"
+    backend_openapi_candidates = [
+        "http://127.0.0.1:3339/mcp/openapi.json",
+        "http://127.0.0.1:3339/openapi.json",
+    ]
+    try:
+        # First try SSE probe at /mcp
+        req = urllib.request.Request(backend_mcp, headers={"Accept": "text/event-stream"})
+        try:
+            with urllib.request.urlopen(req, timeout=3) as resp:
+                ct = resp.headers.get("Content-Type", "")
+                if "text/event-stream" in ct:
+                    chunk = resp.read(512)
+                    snippet = chunk.decode("utf-8", errors="replace")
+                    return JSONResponse(content={"ok": True, "sse": True, "snippet": snippet})
+        except Exception:
+            # fallthrough to openapi candidates
+            pass
+
+        # Fallback: try known openapi locations
+        for backend_openapi in backend_openapi_candidates:
+            try:
+                req2 = urllib.request.Request(backend_openapi, headers={"Accept": "application/json"})
+                with urllib.request.urlopen(req2, timeout=3) as resp2:
+                    data = resp2.read()
+                    try:
+                        j = _json.loads(data)
+                        paths = sorted(list(j.get("paths", {}).keys()))
+                        return JSONResponse(content={"ok": True, "sse": False, "url": backend_openapi, "paths": paths})
+                    except Exception:
+                        return JSONResponse(content={"ok": True, "sse": False, "url": backend_openapi, "raw": data.decode("utf-8", errors="replace")})
+            except Exception:
+                continue
+
+        return JSONResponse({"ok": False, "error": "backend unreachable or no usable endpoint found"}, status_code=502)
+    except Exception as e:
+        return JSONResponse(status_code=502, content={"ok": False, "error": str(e)})
 
 
 @app.get("/mcp_openapi_dynamic.json")
