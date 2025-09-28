@@ -752,6 +752,11 @@ def _build_dynamic_openapi_spec() -> dict:
         "paths": {},
     }
 
+    public = _get_public_base_url()
+    if public:
+        # dynamic servers entry to help clients discover the public origin
+        spec["servers"] = [{"url": public}]
+
     spec["paths"]["/generate"] = {
         "post": {
             "summary": "Generate text (internal)",
@@ -772,6 +777,12 @@ def _build_dynamic_openapi_spec() -> dict:
         spec["x-mcp-tools"] = tools
 
     return spec
+
+
+@app.get("/debug/manifest_url")
+def debug_manifest_url() -> JSONResponse:
+    """Return the public base URL that will be used to rewrite manifests (if any)."""
+    return JSONResponse(content={"public_base_url": _get_public_base_url()})
 
 
 @app.get("/debug/info")
