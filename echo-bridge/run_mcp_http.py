@@ -1,7 +1,8 @@
 import asyncio
+import logging
 import os
 import sys
-from typing import Tuple
+from typing import Any, Tuple
 
 # Ensure this folder (which contains the echo_bridge package) is importable
 sys.path.insert(0, os.path.dirname(__file__))
@@ -31,11 +32,20 @@ def parse_host_port(argv: list[str]) -> Tuple[str, int]:
     return host, port
 
 
-if __name__ == "__main__":
-    # Standalone FastMCP Streamable HTTP server (configurable host/port) under /mcp
-    host, port = parse_host_port(sys.argv[1:])
-    asyncio.run(
-        mcp.run_http_async(
+async def _run_with_handler(host: str, port: int) -> None:
+    loop = asyncio.get_running_loop()
+    logger = logging.getLogger("mcp.server")
+
+    def _exception_handler(loop: asyncio.AbstractEventLoop, context: dict[str, Any]) -> None:  # type: ignore[override]
+        exc = context.get("exception")
+        if isinstance(exc, ConnectionResetError):
+            logger.info("client disconnected (ignored ConnectionResetError)")
+            return
+        loop.default_exception_handler(context)
+
+    loop.set_exception_handler(_exception_handler)
+    try:
+        await mcp.run_http_async(
             transport="http",
             host=host,
             port=port,
@@ -43,4 +53,11 @@ if __name__ == "__main__":
             stateless_http=True,
             log_level="info",
         )
-    )
+    finally:
+        loop.set_exception_handler(None)
+
+
+if __name__ == "__main__":
+    # Standalone FastMCP Streamable HTTP server (configurable host/port) under /mcp
+    host, port = parse_host_port(sys.argv[1:])
+    asyncio.run(_run_with_handler(host, port))

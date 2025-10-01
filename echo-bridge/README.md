@@ -47,6 +47,27 @@ echo-bridge\.venv\Scripts\python.exe echo-bridge\scripts\echo_generate_smoke.py 
 Notes
 - If you start the Bridge without setting `API_KEY`, the endpoint will not require X-API-Key.
 - The smoke script now accepts `--bridge-key` or reads `BRIDGE_KEY` / `API_KEY` from the environment.
+
+## GUI control panel
+
+If you prefer a small desktop helper instead of juggling terminals, launch the Tk interface:
+
+```
+python tools/control_panel.py
+```
+
+Features:
+- Start/stop MCP, Bridge, and a Cloudflare quick tunnel with individual buttons
+- Automatic detection of the public trycloudflare URL (and optional auto-fill of `PUBLIC_BASE_URL`)
+- Built-in smoke test to verify local/public manifest, OpenAPI, and `/mcp` SSE connectivity
+- Combined log viewer so you can watch all processes at once
+- Instant copy buttons for the tunnel origin and the recommended ChatGPT connector URL (`<origin>/mcp`)
+
+Tips:
+- Update the Python executable or cloudflared path at the top of the window if you use a virtualenv or a named tunnel.
+- When a tunnel URL is detected you can copy it straight from the UI or push it into the bridge's `PUBLIC_BASE_URL` field.
+- The smoke test results appear both in the status line and in the log pane.
+- When registering in ChatGPT Developer Tools, use `https://<your-public-origin>/mcp` and ensure the client sends `Accept: text/event-stream` for SSE connections.
 # ECHO-BRIDGE (MVP)
 
 Local bridge for context and controlled actions. FastAPI + SQLite FTS5. Binds 127.0.0.1 only.
