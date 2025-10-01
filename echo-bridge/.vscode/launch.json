@@ -1,0 +1,40 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run ECHO Bridge",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "uvicorn",
+      "args": [
+        "echo_bridge.main:app",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "3333",
+        "--reload"
+      ],
+      "console": "integratedTerminal",
+      "env": {
+        "PUBLIC_BASE_URL": "http://127.0.0.1:3333"
+      }
+    },
+    {
+      "name": "Run MCP Server",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/run_mcp_http.py",
+      "args": ["--host", "127.0.0.1", "--port", "3337"],
+      "console": "integratedTerminal"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Run Bridge + MCP",
+      "configurations": [
+        "Run ECHO Bridge",
+        "Run MCP Server"
+      ]
+    }
+  ]
+}

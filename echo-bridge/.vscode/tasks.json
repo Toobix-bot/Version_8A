@@ -1,0 +1,26 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Start Bridge (uvicorn)",
+      "type": "shell",
+      "command": "uvicorn echo_bridge.main:app --host 127.0.0.1 --port 3333 --reload",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Start MCP Server",
+      "type": "shell",
+      "command": "python run_mcp_http.py --host 127.0.0.1 --port 3337",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Run Smoke Test",
+      "type": "shell",
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File .\\tools\\smoke_test.ps1",
+      "group": "test",
+      "problemMatcher": []
+    }
+  ]
+}
