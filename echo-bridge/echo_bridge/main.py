@@ -12,6 +12,7 @@ import yaml
 from fastapi import Depends, FastAPI, Header, HTTPException, Query, Body
 from fastapi import Request
 from starlette.responses import Response
+
 from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
 import httpx
 from fastapi.staticfiles import StaticFiles
@@ -916,10 +917,23 @@ def index_page() -> HTMLResponse:
 
 # Serve a static OpenAPI spec for ChatGPT/Developer-Mode registration.
 @app.get("/mcp/openapi.json")
-def mcp_openapi() -> JSONResponse:
+def mcp_openapi() -> Response:
+    """Expose the MCP OpenAPI document, preferring the live backend, then static, then dynamic."""
+    backend = _backend_mcp_base()
+    candidates = [f"{backend}/mcp/openapi.json", f"{backend}/openapi.json", f"{backend}/mcp"]
+    for url in candidates:
+        try:
+            r = httpx.get(url, timeout=3.0)
+            if r.status_code == 200:
+                ctype = r.headers.get("content-type", "")
+                if "application/json" in ctype or url.endswith("openapi.json"):
+                    return Response(content=r.content, media_type="application/json")
+                return Response(content=r.text, media_type="text/plain")
+        except Exception:
+            continue
+
     public_dir = Path(__file__).resolve().parent.parent / "public"
     openapi_path = public_dir / "mcp_openapi.json"
-    # Prefer an explicit static file for stability
     if openapi_path.exists():
         try:
             data = _load_json_file(openapi_path)
@@ -927,56 +941,9 @@ def mcp_openapi() -> JSONResponse:
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Failed to load openapi spec: {e}")
 
-    # Fallback: attempt to build a minimal OpenAPI spec dynamically from the FastMCP server
     try:
-        tools = []
-        # Try several common attribute names used by FastMCP to keep compatibility
-        for attr in ("tools", "_tools", "registered_tools", "_registry"):
-            candidate = getattr(mcp_server, attr, None)
-            if candidate:
-                if isinstance(candidate, dict):
-                    tools = list(candidate.keys())
-                elif isinstance(candidate, (list, tuple)):
-                    # items may be objects with a 'name' attribute
-                    names = []
-                    for it in candidate:
-                        n = getattr(it, "name", None) or getattr(it, "__name__", None)
-                        if n:
-                            names.append(n)
-                    tools = names
-                break
-
-        # Build a simple OpenAPI spec exposing the internal /generate and the bridge proxy endpoints
-        spec = {
-            "openapi": "3.0.1",
-            "info": {"title": "ECHO Bridge MCP (dynamic)", "version": "0.1.0"},
-            "paths": {},
-        }
-
-        # Internal generate
-        spec["paths"]["/generate"] = {
-            "post": {
-                "summary": "Generate text (internal)",
-                "requestBody": {"content": {"application/json": {"schema": {"type": "object"}}}},
-                "responses": {"200": {"description": "OK"}},
-            }
-        }
-
-        # Bridge proxy for echo_generate
-        spec["paths"]["/bridge/link_echo_generate/echo_generate"] = {
-            "post": {
-                "summary": "Bridge proxy for echo_generate tool",
-                "requestBody": {"content": {"application/json": {"schema": {"type": "object"}}}},
-                "responses": {"200": {"description": "OK"}},
-            }
-        }
-
-        # Add discovered tools as an extension to help tooling discover capabilities
-        if tools:
-            spec["x-mcp-tools"] = tools
-
-        return JSONResponse(content=spec)
-
+        spec = _build_dynamic_openapi_spec()
+        return JSONResponse(content=spec, media_type="application/json")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to build dynamic openapi spec: {e}")
 
@@ -988,32 +955,8 @@ def _backend_mcp_base() -> str:
     return os.environ.get("MCP_BACKEND_URL", "http://127.0.0.1:3339")
 
 
-@app.get("/mcp/openapi.json")
-def proxy_mcp_openapi() -> Response:
-    backend = _backend_mcp_base()
-    candidates = [f"{backend}/mcp/openapi.json", f"{backend}/openapi.json", f"{backend}/mcp"]
-    for url in candidates:
-        try:
-            r = httpx.get(url, timeout=3.0)
-            if r.status_code == 200:
-                ctype = r.headers.get("content-type", "")
-                # If JSON, return it as application/json
-                if "application/json" in ctype or url.endswith("openapi.json"):
-                    return Response(content=r.content, media_type="application/json")
-                # Otherwise return as text for inspection
-                return Response(content=r.text, media_type="text/plain")
-        except Exception:
-            continue
-    # Fallback to internal dynamic spec
-    try:
-        spec = _build_dynamic_openapi_spec()
-        return JSONResponse(content=spec, media_type="application/json")
-    except Exception as e:
-        raise HTTPException(status_code=502, detail=f"failed to fetch backend openapi: {e}")
-
-
-@app.api_route("/mcp", methods=["GET", "POST"])
-@app.api_route("/mcp/", methods=["GET", "POST"])
+@app.api_route("/mcp", methods=["GET", "POST"], name="proxy_mcp_stream", operation_id="proxy_mcp_stream_root")
+@app.api_route("/mcp/", methods=["GET", "POST"], include_in_schema=False)
 async def proxy_mcp_stream(request: Request):
     backend = _backend_mcp_base()
     url = f"{backend}/mcp"

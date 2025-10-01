@@ -9,7 +9,7 @@
   },
   "api": {
     "type": "openapi",
-    "url": "https://animal-displays-email-fragrance.trycloudflare.com/public/openapi.json",
+    "url": "https://arrive-llc-workforce-handbook.trycloudflare.com/openapi.json",
     "is_user_authenticated": false
   },
   "contact_email": "admin@example.com"

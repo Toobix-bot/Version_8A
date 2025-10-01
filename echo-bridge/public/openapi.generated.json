@@ -4,11 +4,6 @@
     "title": "ECHO Bridge MCP (dynamic)",
     "version": "0.1.0"
   },
-  "servers": [
-    {
-      "url": "https://animal-displays-email-fragrance.trycloudflare.com"
-    }
-  ],
   "paths": {
     "/generate": {
       "post": {
@@ -48,5 +43,10 @@
         }
       }
     }
-  }
+  },
+  "servers": [
+    {
+      "url": "https://arrive-llc-workforce-handbook.trycloudflare.com"
+    }
+  ]
 }
