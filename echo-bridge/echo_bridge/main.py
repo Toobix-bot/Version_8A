@@ -1574,39 +1574,54 @@ async def action_ready() -> JSONResponse:
 
 @app.get("/panel", response_class=HTMLResponse)
 async def panel() -> HTMLResponse:
-        """Minimal HTML control/readiness panel (static) with JS polling /action_ready."""
-        html = """
+    """Minimal HTML control/readiness panel (static) with JS polling /action_ready."""
+    html = """
 <!DOCTYPE html>
 <html lang=\"en\">
 <head>
     <meta charset=\"utf-8\" />
     <title>MCP Bridge Panel</title>
     <style>
-        body { font-family: system-ui, Arial, sans-serif; margin: 1.5rem; background:#111; color:#eee; }
+            :root { color-scheme: dark light; }
+            body { font-family: system-ui, Arial, sans-serif; margin: 1.5rem; background:#111; color:#eee; transition: background .3s, color .3s; }
+            body.light { background:#fafafa; color:#111; }
         h1 { font-size:1.2rem; margin:0 0 .75rem; }
         .grid { display:grid; gap:.75rem; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); }
         .card { background:#1f1f1f; padding:1rem; border-radius:8px; box-shadow:0 0 0 1px #333; }
+            body.light .card { background:#ffffff; box-shadow:0 0 0 1px #ddd; }
         .status { font-weight:600; }
         .ok { color:#4ade80; }
         .bad { color:#f87171; }
         a { color:#60a5fa; text-decoration:none; }
         a:hover { text-decoration:underline; }
         code { background:#222; padding:2px 4px; border-radius:4px; }
+            body.light code { background:#eee; }
         button { background:#2563eb; color:#fff; border:none; padding:.4rem .8rem; border-radius:4px; cursor:pointer; }
         button:hover { background:#1d4ed8; }
         #raw { white-space:pre; font-size:.75rem; max-height:320px; overflow:auto; background:#0d0d0d; padding:.5rem; border:1px solid #333; border-radius:6px; }
+            body.light #raw { background:#f0f0f0; border-color:#ccc; }
+            table.metrics { width:100%; border-collapse:collapse; font-size:.7rem; }
+            table.metrics th, table.metrics td { padding:2px 4px; text-align:left; border-bottom:1px solid #333; }
+            body.light table.metrics th, body.light table.metrics td { border-color:#ddd; }
+            .logbox { font-size:.65rem; white-space:pre-wrap; max-height:180px; overflow:auto; background:#0d0d0d; border:1px solid #333; padding:.5rem; border-radius:6px; }
+            body.light .logbox { background:#f0f0f0; border-color:#ccc; }
         footer { margin-top:1.5rem; font-size:.7rem; opacity:.6; }
+            .row { display:flex; gap:.5rem; flex-wrap:wrap; align-items:center; }
     </style>
 </head>
 <body>
     <h1>MCP Bridge Control Panel</h1>
-    <div id=\"links\"></div>
+        <div class=\"row\">
+            <div id=\"links\" style=\"flex:1;\"></div>
+            <button onclick=\"toggleTheme()\" id=\"themeBtn\">Light Mode</button>
+        </div>
     <div class=\"grid\">
         <div class=\"card\">
             <div>Public Base URL:</div>
             <div id=\"base\"><em>loading...</em></div>
             <div style=\"margin-top:.5rem;\">
                 <button onclick=\"copyUrl()\">Copy /mcp URL</button>
+                    <button onclick=\"copyManifest()\">Copy Manifest URL</button>
             </div>
         </div>
         <div class=\"card\">
@@ -1625,6 +1640,19 @@ async def panel() -> HTMLResponse:
             </ol>
             <button onclick=\"refreshNow()\">Refresh Now</button>
         </div>
+            <div class=\"card\">
+                <strong>Metrics Snapshot</strong>
+                <div id=\"metrics_empty\"><em>loading...</em></div>
+                <table class=\"metrics\" id=\"metrics_table\" style=\"display:none;\">
+                    <thead><tr><th>Group</th><th>Key</th><th>Value</th></tr></thead>
+                    <tbody id=\"metrics_body\"></tbody>
+                </table>
+            </div>
+            <div class=\"card\">
+                <strong>Cloudflared Log Tail</strong>
+                <div id=\"logtail\" class=\"logbox\">(loading)</div>
+                <button onclick=\"refreshLogs()\">Refresh Logs</button>
+            </div>
         <div class=\"card\" style=\"grid-column:1/-1;\">
             <details open>
                 <summary style=\"cursor:pointer;\">Raw /action_ready payload</summary>
@@ -1634,21 +1662,23 @@ async def panel() -> HTMLResponse:
     </div>
     <footer>Panel auto-refreshes every 5s. /panel endpoint.</footer>
     <script>
-        async function fetchReady(){
-            try {
-                const r = await fetch('/action_ready',{cache:'no-store'});
-                const j = await r.json();
-                document.getElementById('raw').textContent = JSON.stringify(j,null,2);
-                const ok = (v,id)=>{const el=document.getElementById(id); if(!el) return; el.textContent=v? 'OK':'FAIL'; el.className=v? 'ok':'bad';};
-                document.getElementById('base').textContent = j.public_base_url || '(none)';
-                ok(j.manifest_ok,'manifest');
-                ok(j.openapi_ok,'openapi');
-                ok(j.backend_sse,'sse');
-                const f = document.getElementById('fallback'); f.textContent = j.fallback_enabled?'YES':'NO'; f.className = j.fallback_enabled?'ok':'bad';
-                document.getElementById('updated').textContent = new Date().toLocaleTimeString();
-                renderLinks(j.public_base_url);
-            } catch(e){ console.error(e); }
-        }
+            async function fetchReady(){
+                try {
+                    const r = await fetch('/panel_data',{cache:'no-store'});
+                    const j = await r.json();
+                    const rd = j.readiness || {};
+                    document.getElementById('raw').textContent = JSON.stringify(rd,null,2);
+                    const ok = (v,id)=>{const el=document.getElementById(id); if(!el) return; el.textContent=v? 'OK':'FAIL'; el.className=v? 'ok':'bad';};
+                    document.getElementById('base').textContent = rd.public_base_url || '(none)';
+                    ok(rd.manifest_ok,'manifest');
+                    ok(rd.openapi_ok,'openapi');
+                    ok(rd.backend_sse,'sse');
+                    const f = document.getElementById('fallback'); f.textContent = rd.fallback_enabled?'YES':'NO'; f.className = rd.fallback_enabled?'ok':'bad';
+                    document.getElementById('updated').textContent = new Date().toLocaleTimeString();
+                    renderLinks(rd.public_base_url);
+                    renderMetrics(j.metrics || {});
+                } catch(e){ console.error(e); }
+            }
         function renderLinks(base){
             const c = document.getElementById('links');
             if(!base){ c.innerHTML = '<em>No base URL set (tunnel not detected yet)</em>'; return; }
@@ -1664,31 +1694,85 @@ async def panel() -> HTMLResponse:
                 [...btns].forEach(b=>{ if(b.innerText.startsWith('Copy')) { b.innerText='Copied!'; setTimeout(()=>b.innerText='Copy /mcp URL',1200); }});
             });
         }
+            function copyManifest(){
+                const base = document.getElementById('base').textContent.trim();
+                if(!base || base === '(none)'){ alert('No public base URL yet.'); return; }
+                const full = base.replace(/\/$/,'') + '/chatgpt_tool_manifest.json';
+                navigator.clipboard.writeText(full).then(()=>{ 
+                    const btns = document.getElementsByTagName('button');
+                    [...btns].forEach(b=>{ if(b.innerText.startsWith('Copy Manifest')) { b.innerText='Copied!'; setTimeout(()=>b.innerText='Copy Manifest URL',1200); }});
+                });
+            }
+            function renderMetrics(m){
+                const table = document.getElementById('metrics_table');
+                const body = document.getElementById('metrics_body');
+                const empty = document.getElementById('metrics_empty');
+                body.innerHTML='';
+                const rows=[];
+                for(const group of Object.keys(m)){
+                    const obj = m[group];
+                    if(typeof obj === 'object'){
+                        for(const k of Object.keys(obj)){
+                            rows.push(`<tr><td>${group}</td><td>${k}</td><td>${obj[k]}</td></tr>`);
+                        }
+                    }
+                }
+                if(rows.length){
+                    empty.style.display='none';
+                    table.style.display='table';
+                    body.innerHTML = rows.join('');
+                } else {
+                    empty.style.display='block';
+                    table.style.display='none';
+                }
+            }
+            async function refreshLogs(){
+                try { const r = await fetch('/logs/cloudflared?limit=160'); const j = await r.json(); document.getElementById('logtail').textContent = j.lines ? j.lines.join('') : '(no lines)'; } catch(e){ console.error(e); }
+            }
+            function toggleTheme(){
+                document.body.classList.toggle('light');
+                const btn = document.getElementById('themeBtn');
+                btn.textContent = document.body.classList.contains('light') ? 'Dark Mode' : 'Light Mode';
+            }
         function refreshNow(){ fetchReady(); }
         fetchReady();
         setInterval(fetchReady,5000);
+            refreshLogs();
+            setInterval(refreshLogs,10000);
     </script>
 </body>
 </html>
 """
-        return HTMLResponse(content=html)
+    return HTMLResponse(content=html)
 
+@app.get("/panel_data")
+async def panel_data() -> JSONResponse:
+    """Return combined readiness + metrics for richer panel polling."""
+    ready_resp = await action_ready()
+    ready = ready_resp.body
+    try:
+        import json
+        ready_json = json.loads(ready)
+    except Exception:
+        ready_json = {"error": "parse_ready_failed"}
+    metrics_snapshot = METRICS.snapshot()
+    payload = {"readiness": ready_json, "metrics": metrics_snapshot}
+    return JSONResponse(content=payload)
 
-    @app.get("/panel_data")
-    async def panel_data() -> JSONResponse:
-        """Return combined readiness + metrics for richer panel polling."""
-        # Reuse existing logic for readiness
-        ready_resp = await action_ready()
-        ready = ready_resp.body
+@app.get("/logs/cloudflared")
+async def cloudflared_logs(limit: int = 120) -> JSONResponse:
+    """Return tail of cloudflared_control.log if present (used by /panel)."""
+    log_path = os.path.join(os.path.dirname(__file__), "..", "cloudflared_control.log")
+    log_path = os.path.abspath(log_path)
+    lines: list[str] = []
+    if os.path.exists(log_path):
         try:
-            import json
-            ready_json = json.loads(ready)
-        except Exception:
-            ready_json = {"error": "parse_ready_failed"}
-        # Metrics snapshot
-        metrics_snapshot = METRICS.snapshot()
-        payload = {"readiness": ready_json, "metrics": metrics_snapshot}
-        return JSONResponse(content=payload)
+            with open(log_path, "r", encoding="utf-8", errors="ignore") as f:
+                all_lines = f.readlines()
+                lines = all_lines[-limit:]
+        except Exception as e:
+            return JSONResponse(content={"error": str(e), "path": log_path})
+    return JSONResponse(content={"path": log_path, "lines": lines})
 
 
 @app.get("/mcp_openapi_dynamic.json")

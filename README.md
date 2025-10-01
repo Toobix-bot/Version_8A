@@ -274,10 +274,13 @@ Bei Named Tunnel Setup diesen Schritt durch eigenen dauerhaften `cloudflared tun
 ### Web Panel (`/panel`)
 Ein minimales HTML-Dashboard ist unter `/panel` verfügbar, sobald die Bridge läuft.
 Features:
-- Periodischer Abruf (5s) von `/action_ready`
+- Periodischer Abruf (5s) kombinierter Daten via `/panel_data` (Readiness + Metrics)
 - Status-Anzeige (Manifest / OpenAPI / Backend SSE / Fallback)
+- Metrics Snapshot Tabelle (SSE/POST Counters & Bytes)
+- Cloudflared Log Tail (automatisches Nachladen alle 10s über `/logs/cloudflared`)
+- Light/Dark Toggle
 - Direkte Links zu `openapi.json`, `chatgpt_tool_manifest.json`, `/mcp`
-- Copy-Button für die vollständige `/mcp` URL zur ChatGPT-Registrierung
+- Copy-Buttons für `/mcp` und Manifest-URL
 
 Aufruf lokal:
 ```
@@ -292,6 +295,10 @@ Vorgehen zur Registrierung in ChatGPT:
 2. `/panel` öffnen → warten bis alle drei Kern-Checks OK.
 3. "Copy /mcp URL" klicken.
 4. In ChatGPT als Connector-URL einfügen.
+
+Zusätzliche Endpunkte für automatisierte Monitoring-Tools:
+- `/panel_data` → JSON: `{ readiness: {..}, metrics: {..} }`
+- `/logs/cloudflared?limit=150` → Tail des Cloudflare Quick Tunnel Logs
 
 ### Test Instructions (Schnellreferenz)
 Basis (lokal): `http://127.0.0.1:3333`

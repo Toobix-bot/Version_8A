@@ -4,14 +4,20 @@
   "name_for_model": "echo_bridge",
   "description_for_human": "Generieren und Kontext-Ressourcen abrufen (generate + resources).",
   "description_for_model": "Use /generate with {prompt, contextIds}. Use /resources to search and pick context.",
-  "auth": { "type": "none" },
+  "auth": {
+    "type": "none"
+  },
   "api": {
     "type": "openapi",
-    "url": "https://michelle-characters-breaks-tim.trycloudflare.com/openapi.json",
+    "url": "http://127.0.0.1:3333/public/openapi.json",
     "is_user_authenticated": false
   },
   "contact_email": "admin@example.com",
   "legal_info_url": "https://example.com/legal",
-  "endpoints": ["/generate", "/resources", "/resources/{id}"],
+  "endpoints": [
+    "/generate",
+    "/resources",
+    "/resources/{id}"
+  ],
   "logo_url": "https://michelle-characters-breaks-tim.trycloudflare.com/favicon.png"
 }
