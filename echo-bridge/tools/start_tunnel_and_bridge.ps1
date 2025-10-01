@@ -89,6 +89,20 @@ $envpath = Join-Path $working '.env'
 "PUBLIC_BASE_URL=$public" | Out-File -FilePath $envpath -Encoding UTF8
 Write-Host "Wrote $envpath"
 
+# Auto-patch public/openapi.json and public/chatgpt_tool_manifest.json to reflect this URL
+$autoPatch = Join-Path $working 'scripts/auto_patch_tunnel.ps1'
+if (Test-Path $autoPatch) {
+    try {
+        Write-Host "Running auto patch script to sync manifest & OpenAPI with $public"
+        & powershell -ExecutionPolicy Bypass -File $autoPatch 2>$null | Out-Null
+        Write-Host "Auto patch complete."
+    } catch {
+        Write-Host "Auto patch script failed: $_"
+    }
+} else {
+    Write-Host "auto_patch_tunnel.ps1 not found (expected at $autoPatch). Skipping auto patch."
+}
+
 # Start the bridge (uvicorn)
 Write-Host "Starting uvicorn bridge (background) with PUBLIC_BASE_URL=$public"
 $startInfo = @('-m','uvicorn','echo_bridge.main:app','--host','0.0.0.0','--port','3333')
@@ -96,3 +110,12 @@ Start-Process -FilePath python -ArgumentList $startInfo -WorkingDirectory $worki
 
 Write-Host "Bridge started. Verify at: $public/openapi.json and $public/chatgpt_tool_manifest.json"
 Write-Host "Local endpoints: http://127.0.0.1:3333/openapi.json and /chatgpt_tool_manifest.json"
+
+# Optional health check ping (wait briefly then query /action_ready if available)
+Start-Sleep -Seconds 2
+try {
+    $health = Invoke-WebRequest -Uri "http://127.0.0.1:3333/action_ready" -UseBasicParsing -TimeoutSec 5
+    Write-Host "/action_ready: $($health.StatusCode) $($health.Content)"
+} catch {
+    Write-Host "Could not fetch /action_ready (may not be implemented yet): $_"
+}

@@ -162,6 +162,41 @@ set MCP_ALLOW_FALLBACK_GET=1
 liefert die Bridge stattdessen ein JSON mit Instruktionen (Status 200), wodurch die Registrierung/Probe nicht scheitert. Für produktive, strikt-konforme Umgebungen lieber deaktiviert lassen.
 
 ### Tests & Smoke
+### Automatische Tunnel-Domain Aktualisierung
+Skripte:
+- `scripts/update_public_domain.py <domain>` setzt `servers[0].url` in `public/openapi.json` und `api.url` im Manifest.
+- `scripts/auto_patch_tunnel.ps1` versucht die letzte `trycloudflare.com` URL aus `cloudflared.log` zu lesen und patched automatisch.
+
+Beispiel (PowerShell):
+```
+cd echo-bridge
+python scripts/update_public_domain.py https://michelle-characters-breaks-tim.trycloudflare.com
+```
+Oder automatisch nach Start von cloudflared (sofern Logging in `cloudflared.log`):
+```
+pwsh scripts/auto_patch_tunnel.ps1
+```
+
+### Dauerhafte Domain (Named Cloudflare Tunnel)
+1. Cloudflare Account anlegen (Free Tier).
+2. Eigene Domain zu Cloudflare DNS delegieren (Nameserver umstellen beim Registrar).
+3. `cloudflared tunnel create echo-bridge` ausführen → Tunnel-UUID + JSON Creds unter `~/.cloudflared/`.
+4. DNS Route: `cloudflared tunnel route dns echo-bridge mcp.deine-domain.tld`
+5. `config.yml` (z.B. im gleichen Folder):
+```
+tunnel: <TUNNEL-UUID>
+credentials-file: C:\Users\<DU>\.cloudflared\<TUNNEL-UUID>.json
+ingress:
+	- hostname: mcp.deine-domain.tld
+		service: http://127.0.0.1:3333
+	- service: http_status:404
+```
+6. Start: `cloudflared tunnel run echo-bridge`
+7. Dann Manifest einmalig patchen: `python scripts/update_public_domain.py https://mcp.deine-domain.tld`
+8. ChatGPT Registrierung mit stabiler Domain durchführen.
+
+Hinweis: Danach entfällt das ständige Re-Patchen bei jedem Quick Tunnel.
+
 REST Client Datei: `echo-bridge/mcp_tests.http`
 
 Pytest (nur schnelle Verhaltenschecks für /mcp GET Varianten):
@@ -197,6 +232,106 @@ curl http://127.0.0.1:3333/mcp
 ```
 curl -H "Accept: text/event-stream" -N http://127.0.0.1:3333/mcp
 ```
+
+### Aggregierter Readiness Endpoint `/action_ready`
+Die Bridge stellt einen zusammengefassten Health/Readiness Check bereit:
+
+```
+GET /action_ready
+{
+	"public_base_url": "https://<aktueller-tunnel>",
+	"manifest_ok": true,
+	"openapi_ok": true,
+	"backend_sse": true,
+	"fallback_enabled": false,
+	"timestamp": 1730000000
+}
+```
+
+Felder:
+- public_base_url: Aus `.env` oder Environment gezogener Basis-Pfad.
+- manifest_ok / openapi_ok: HTTP 200 Test gegen öffentliche URLs.
+- backend_sse: Kurzer Probe-Request an `<base>/mcp` mit `Accept: text/event-stream` (Status 200 erwartet).
+- fallback_enabled: Ob `MCP_ALLOW_FALLBACK_GET` aktiv ist.
+- timestamp: Unix Sekunde.
+
+Verwendung vor ChatGPT Registrierung: Sicherstellen, dass alle drei Flags (`manifest_ok`, `openapi_ok`, `backend_sse`) true sind.
+
+### One-Step Control Script
+`tools/start_tunnel_and_bridge.ps1` startet automatisch einen Cloudflare Quick Tunnel, patched Manifest & OpenAPI (falls `scripts/auto_patch_tunnel.ps1` vorhanden), startet Uvicorn und ruft danach optional `/action_ready` lokal ab.
+
+Aufruf:
+```
+powershell -ExecutionPolicy Bypass -File .\echo-bridge\tools\start_tunnel_and_bridge.ps1
+```
+
+Nach Erfolg im Output:
+- "Discovered public URL" → kopieren.
+- Prüfe `/action_ready` (wird bereits geloggt). Falls `backend_sse=false`, prüfen ob lokaler MCP Backend Port (3339) erreichbar ist oder Bridge-Konfiguration anpassen.
+
+Bei Named Tunnel Setup diesen Schritt durch eigenen dauerhaften `cloudflared tunnel run` ersetzen; danach einmal `update_public_domain.py` ausführen und `/action_ready` prüfen.
+
+### Web Panel (`/panel`)
+Ein minimales HTML-Dashboard ist unter `/panel` verfügbar, sobald die Bridge läuft.
+Features:
+- Periodischer Abruf (5s) von `/action_ready`
+- Status-Anzeige (Manifest / OpenAPI / Backend SSE / Fallback)
+- Direkte Links zu `openapi.json`, `chatgpt_tool_manifest.json`, `/mcp`
+- Copy-Button für die vollständige `/mcp` URL zur ChatGPT-Registrierung
+
+Aufruf lokal:
+```
+http://127.0.0.1:3333/panel
+```
+Über Tunnel (z.B. Cloudflare / ngrok):
+```
+https://<tunnel-domain>/panel
+```
+Vorgehen zur Registrierung in ChatGPT:
+1. Tunnel/Bridge starten.
+2. `/panel` öffnen → warten bis alle drei Kern-Checks OK.
+3. "Copy /mcp URL" klicken.
+4. In ChatGPT als Connector-URL einfügen.
+
+### Test Instructions (Schnellreferenz)
+Basis (lokal): `http://127.0.0.1:3333`
+
+1. OpenAPI erreichbar:
+```
+curl -f http://127.0.0.1:3333/openapi.json | jq '.info.title'
+```
+2. Manifest erreichbar:
+```
+curl -f http://127.0.0.1:3333/chatgpt_tool_manifest.json | jq '.name_for_model'
+```
+3. Fallback (ohne Accept) – erwartet 200 nur wenn MCP_ALLOW_FALLBACK_GET=1:
+```
+curl -i http://127.0.0.1:3333/mcp | head
+```
+4. SSE Header – Status 200 + offene Verbindung:
+```
+curl -H "Accept: text/event-stream" -N http://127.0.0.1:3333/mcp
+```
+5. Tool Listing (POST Streaming):
+```
+curl -X POST -H "Content-Type: application/json" \
+	-d '{"jsonrpc":"2.0","id":1,"method":"list_tools"}' \
+	http://127.0.0.1:3333/mcp
+```
+6. Readiness Aggregat:
+```
+curl -s http://127.0.0.1:3333/action_ready | jq
+```
+7. Metrics Snapshot:
+```
+curl -s http://127.0.0.1:3333/metrics | jq
+```
+Öffentlicher Tunnel: Ersetze Basis durch `https://<tunnel-domain>`.
+
+Fehlerbilder:
+- 406 bei Schritt 3 & Fallback aktiv erwartet? → Env Variable fehlt.
+- 502 in readiness backend_sse=false → Backend (Port 3339) nicht erreichbar.
+- manifest_ok=false → Auto-Patch nicht ausgeführt oder PUBLIC_BASE_URL leer.
 
 
 

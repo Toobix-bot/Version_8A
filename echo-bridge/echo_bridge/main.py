@@ -1522,6 +1522,175 @@ def debug_backend_health() -> JSONResponse:
         return JSONResponse(status_code=502, content={"ok": False, "error": str(e)})
 
 
+@app.get("/action_ready")
+async def action_ready() -> JSONResponse:
+    """Aggregate readiness info for ChatGPT/Actions style integration.
+
+    Returns JSON with:
+      - public_base_url
+      - manifest_ok / openapi_ok (HTTP 200 fetch test)
+      - backend_sse (was able to open short SSE probe to /mcp with Accept header)
+      - fallback_enabled (MCP_ALLOW_FALLBACK_GET)
+      - timestamp
+    """
+    import httpx, time
+    base = _get_public_base_url()
+    pubs: dict[str, object] = {
+        "public_base_url": base,
+        "fallback_enabled": os.environ.get("MCP_ALLOW_FALLBACK_GET", "").lower() in ("1", "true", "yes"),
+        "manifest_ok": False,
+        "openapi_ok": False,
+        "backend_sse": False,
+        "timestamp": int(time.time()),
+    }
+    try:
+        if base:
+            async with httpx.AsyncClient(timeout=4) as client:
+                # Manifest
+                try:
+                    r = await client.get(f"{base}/chatgpt_tool_manifest.json")
+                    if r.status_code == 200:
+                        pubs["manifest_ok"] = True
+                except Exception:
+                    pass
+                # OpenAPI
+                try:
+                    r2 = await client.get(f"{base}/openapi.json")
+                    if r2.status_code == 200:
+                        pubs["openapi_ok"] = True
+                except Exception:
+                    pass
+                # SSE probe (short)
+                try:
+                    r3 = await client.get(f"{base}/mcp", headers={"Accept": "text/event-stream"}, timeout=4)
+                    if r3.status_code == 200:
+                        pubs["backend_sse"] = True
+                except Exception:
+                    pass
+    except Exception:
+        pass
+    return JSONResponse(content=pubs)
+
+
+@app.get("/panel", response_class=HTMLResponse)
+async def panel() -> HTMLResponse:
+        """Minimal HTML control/readiness panel (static) with JS polling /action_ready."""
+        html = """
+<!DOCTYPE html>
+<html lang=\"en\">
+<head>
+    <meta charset=\"utf-8\" />
+    <title>MCP Bridge Panel</title>
+    <style>
+        body { font-family: system-ui, Arial, sans-serif; margin: 1.5rem; background:#111; color:#eee; }
+        h1 { font-size:1.2rem; margin:0 0 .75rem; }
+        .grid { display:grid; gap:.75rem; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); }
+        .card { background:#1f1f1f; padding:1rem; border-radius:8px; box-shadow:0 0 0 1px #333; }
+        .status { font-weight:600; }
+        .ok { color:#4ade80; }
+        .bad { color:#f87171; }
+        a { color:#60a5fa; text-decoration:none; }
+        a:hover { text-decoration:underline; }
+        code { background:#222; padding:2px 4px; border-radius:4px; }
+        button { background:#2563eb; color:#fff; border:none; padding:.4rem .8rem; border-radius:4px; cursor:pointer; }
+        button:hover { background:#1d4ed8; }
+        #raw { white-space:pre; font-size:.75rem; max-height:320px; overflow:auto; background:#0d0d0d; padding:.5rem; border:1px solid #333; border-radius:6px; }
+        footer { margin-top:1.5rem; font-size:.7rem; opacity:.6; }
+    </style>
+</head>
+<body>
+    <h1>MCP Bridge Control Panel</h1>
+    <div id=\"links\"></div>
+    <div class=\"grid\">
+        <div class=\"card\">
+            <div>Public Base URL:</div>
+            <div id=\"base\"><em>loading...</em></div>
+            <div style=\"margin-top:.5rem;\">
+                <button onclick=\"copyUrl()\">Copy /mcp URL</button>
+            </div>
+        </div>
+        <div class=\"card\">
+            <div class=\"status\">Manifest: <span id=\"manifest\">?</span></div>
+            <div class=\"status\">OpenAPI: <span id=\"openapi\">?</span></div>
+            <div class=\"status\">Backend SSE: <span id=\"sse\">?</span></div>
+            <div class=\"status\">Fallback Enabled: <span id=\"fallback\">?</span></div>
+            <div class=\"status\">Updated: <span id=\"updated\">—</span></div>
+        </div>
+        <div class=\"card\">
+            <strong>Instructions</strong>
+            <ol style=\"padding-left:1.1rem; font-size:.8rem; line-height:1.25rem;\">
+                <li>Ensure all three (Manifest/OpenAPI/SSE) show OK.</li>
+                <li>Click Copy /mcp URL.</li>
+                <li>Register in ChatGPT (Custom Connector or Actions).</li>
+            </ol>
+            <button onclick=\"refreshNow()\">Refresh Now</button>
+        </div>
+        <div class=\"card\" style=\"grid-column:1/-1;\">
+            <details open>
+                <summary style=\"cursor:pointer;\">Raw /action_ready payload</summary>
+                <div id=\"raw\">(loading)</div>
+            </details>
+        </div>
+    </div>
+    <footer>Panel auto-refreshes every 5s. /panel endpoint.</footer>
+    <script>
+        async function fetchReady(){
+            try {
+                const r = await fetch('/action_ready',{cache:'no-store'});
+                const j = await r.json();
+                document.getElementById('raw').textContent = JSON.stringify(j,null,2);
+                const ok = (v,id)=>{const el=document.getElementById(id); if(!el) return; el.textContent=v? 'OK':'FAIL'; el.className=v? 'ok':'bad';};
+                document.getElementById('base').textContent = j.public_base_url || '(none)';
+                ok(j.manifest_ok,'manifest');
+                ok(j.openapi_ok,'openapi');
+                ok(j.backend_sse,'sse');
+                const f = document.getElementById('fallback'); f.textContent = j.fallback_enabled?'YES':'NO'; f.className = j.fallback_enabled?'ok':'bad';
+                document.getElementById('updated').textContent = new Date().toLocaleTimeString();
+                renderLinks(j.public_base_url);
+            } catch(e){ console.error(e); }
+        }
+        function renderLinks(base){
+            const c = document.getElementById('links');
+            if(!base){ c.innerHTML = '<em>No base URL set (tunnel not detected yet)</em>'; return; }
+            const esc = base.replace(/"/g,'');
+            c.innerHTML = `<p><a href="${esc}/openapi.json" target="_blank">OpenAPI</a> · <a href="${esc}/chatgpt_tool_manifest.json" target="_blank">Manifest</a> · <a href="${esc}/mcp" target="_blank">/mcp (SSE)</a></p>`;
+        }
+        function copyUrl(){
+            const base = document.getElementById('base').textContent.trim();
+            if(!base || base === '(none)'){ alert('No public base URL yet.'); return; }
+            const full = base.replace(/\/$/,'') + '/mcp';
+            navigator.clipboard.writeText(full).then(()=>{ 
+                const btns = document.getElementsByTagName('button');
+                [...btns].forEach(b=>{ if(b.innerText.startsWith('Copy')) { b.innerText='Copied!'; setTimeout(()=>b.innerText='Copy /mcp URL',1200); }});
+            });
+        }
+        function refreshNow(){ fetchReady(); }
+        fetchReady();
+        setInterval(fetchReady,5000);
+    </script>
+</body>
+</html>
+"""
+        return HTMLResponse(content=html)
+
+
+    @app.get("/panel_data")
+    async def panel_data() -> JSONResponse:
+        """Return combined readiness + metrics for richer panel polling."""
+        # Reuse existing logic for readiness
+        ready_resp = await action_ready()
+        ready = ready_resp.body
+        try:
+            import json
+            ready_json = json.loads(ready)
+        except Exception:
+            ready_json = {"error": "parse_ready_failed"}
+        # Metrics snapshot
+        metrics_snapshot = METRICS.snapshot()
+        payload = {"readiness": ready_json, "metrics": metrics_snapshot}
+        return JSONResponse(content=payload)
+
+
 @app.get("/mcp_openapi_dynamic.json")
 def mcp_openapi_dynamic() -> JSONResponse:
     try:
