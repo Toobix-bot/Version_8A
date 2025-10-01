@@ -1,19 +1,17 @@
 {
   "schema_version": "v1",
-  "name_for_human": "ECHO Bridge (generated)",
-  "description_for_human": "ECHO bridge exposing generate and resources endpoints.",
-  "auth": {
-    "type": "none"
-  },
+  "name_for_human": "ECHO Bridge",
+  "name_for_model": "echo_bridge",
+  "description_for_human": "Generieren und Kontext-Ressourcen abrufen (generate + resources).",
+  "description_for_model": "Use /generate with {prompt, contextIds}. Use /resources to search and pick context.",
+  "auth": { "type": "none" },
   "api": {
     "type": "openapi",
-    "url": "https://arrive-llc-workforce-handbook.trycloudflare.com/openapi.json",
+    "url": "https://michelle-characters-breaks-tim.trycloudflare.com/openapi.json",
     "is_user_authenticated": false
   },
-  "endpoints": [
-    "/generate",
-    "/resources",
-    "/resources/{id}"
-  ],
-  "description_for_model": "Use /resources to list or open stored chunks."
+  "contact_email": "admin@example.com",
+  "legal_info_url": "https://example.com/legal",
+  "endpoints": ["/generate", "/resources", "/resources/{id}"],
+  "logo_url": "https://michelle-characters-breaks-tim.trycloudflare.com/favicon.png"
 }

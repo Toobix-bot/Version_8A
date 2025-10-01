@@ -43,10 +43,5 @@
         }
       }
     }
-  },
-  "servers": [
-    {
-      "url": "https://arrive-llc-workforce-handbook.trycloudflare.com"
-    }
-  ]
+  }
 }

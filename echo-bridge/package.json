@@ -1,0 +1,13 @@
+{
+  "name": "echo-bridge-smoke",
+  "type": "module",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "smoke:sse": "node sse_smoke.mjs",
+    "smoke:post": "node post_smoke.mjs"
+  },
+  "dependencies": {
+    "undici": "^6.19.8"
+  }
+}

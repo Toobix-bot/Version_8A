@@ -3,9 +3,11 @@ from __future__ import annotations
 import json
 import os
 import logging
+import asyncio
+import anyio
 from pathlib import Path
 from time import perf_counter
-from typing import Any, Optional, cast, Awaitable, Callable
+from typing import Any, Optional, cast, Awaitable, Callable, AsyncGenerator, Dict, List
 from urllib.parse import urlparse, urlunparse
 
 import yaml
@@ -163,6 +165,8 @@ handler.setFormatter(JsonLogFormatter())
 logger.addHandler(handler)
 logger.setLevel(logging.INFO)
 
+## metrics moved below after app creation
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -191,6 +195,44 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="ECHO-BRIDGE", lifespan=lifespan)
+# -----------------------------
+# Simple in-process metrics (defined after app creation)
+# -----------------------------
+class Metrics:
+    active_sse: int = 0
+    started_sse: int = 0
+    completed_sse: int = 0
+    aborted_sse: int = 0
+    started_post: int = 0
+    active_post: int = 0
+    completed_post: int = 0
+    aborted_post: int = 0
+    bytes_up_post: int = 0
+    bytes_down_post: int = 0
+
+
+metrics = Metrics()
+
+
+@app.get("/metrics")
+def metrics_endpoint() -> JSONResponse:  # type: ignore[misc]
+    data = {
+        "sse": {
+            "active": metrics.active_sse,
+            "started": metrics.started_sse,
+            "completed": metrics.completed_sse,
+            "aborted": metrics.aborted_sse,
+        },
+        "post": {
+            "active": metrics.active_post,
+            "started": metrics.started_post,
+            "completed": metrics.completed_post,
+            "aborted": metrics.aborted_post,
+            "bytes_up": metrics.bytes_up_post,
+            "bytes_down": metrics.bytes_down_post,
+        },
+    }
+    return JSONResponse(content=data)
 # Allow CORS for local testing and for ChatGPT/tool tooling. In production you
 # should restrict origins to your hosted manifest / UI origins.
 app.add_middleware(
@@ -357,36 +399,11 @@ def serve_manifest() -> JSONResponse:
         raise HTTPException(status_code=500, detail=f"Failed to read chatgpt manifest: {e}")
 
 
-@app.get("/openapi.json")
-def serve_openapi_root() -> JSONResponse:
-    """Fallback root OpenAPI JSON endpoint. Returns same content as /public/openapi.json."""
-    p = public_dir / "openapi.json"
-    if not p.exists():
-        raise HTTPException(status_code=404, detail="openapi.json not found")
-    try:
-        data = _load_json_file(p)
-        public = _get_public_base_url()
-        if public:
-            data = _recursive_replace_origins(data, public)
-        return JSONResponse(content=data, media_type="application/json")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to read openapi.json: {e}")
-
-
-@app.get("/chatgpt_tool_manifest.json")
-def serve_manifest_root() -> JSONResponse:
-    """Fallback root manifest endpoint. Returns same content as /public/chatgpt_tool_manifest.json."""
-    p = public_dir / "chatgpt_tool_manifest.json"
-    if not p.exists():
-        raise HTTPException(status_code=404, detail="chatgpt_tool_manifest.json not found")
-    try:
-        data = _load_json_file(p)
-        public = _get_public_base_url()
-        if public:
-            data = _recursive_replace_origins(data, public)
-        return JSONResponse(content=data, media_type="application/json")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to read chatgpt manifest: {e}")
+## NOTE: Removed earlier duplicate /openapi.json and /chatgpt_tool_manifest.json route
+## definitions to avoid FastAPI warnings about duplicate Operation IDs and
+## conflicting path registrations. The canonical implementations now live
+## further below (serve_top_openapi / serve_top_manifest) which include
+## explicit CORS headers and generated-file fallbacks.
 
 
 @app.middleware("http")
@@ -955,71 +972,234 @@ def _backend_mcp_base() -> str:
     return os.environ.get("MCP_BACKEND_URL", "http://127.0.0.1:3339")
 
 
-@app.api_route("/mcp", methods=["GET", "POST"], name="proxy_mcp_stream", operation_id="proxy_mcp_stream_root")
-@app.api_route("/mcp/", methods=["GET", "POST"], include_in_schema=False)
-async def proxy_mcp_stream(request: Request):
-    backend = _backend_mcp_base()
-    url = f"{backend}/mcp"
-    # Copy most headers; ensure Host is backend host
-    headers = {k: v for k, v in request.headers.items()}
-    # Ensure Host header targets the backend host (keep port if present)
-    try:
-        from urllib.parse import urlparse
+#############################
+# Robust /mcp streaming proxy
+#############################
 
-        parsed = urlparse(backend)
-        host_hdr = parsed.netloc or parsed.hostname or "127.0.0.1"
-        headers["host"] = host_hdr
-    except Exception:
-        headers["host"] = "127.0.0.1"
-    method = request.method.upper()
-    try:
-        async with httpx.AsyncClient(timeout=None) as client:
-            # Use same method as incoming request (GET for SSE, POST for session creation)
-            async with client.stream(method, url, headers=headers, data=await request.body()) as resp:
-                status = resp.status_code
-                content_type = resp.headers.get("content-type", "text/event-stream")
-                async def event_generator():
-                    try:
-                        async for chunk in resp.aiter_bytes():
-                            if chunk:
-                                yield chunk
-                    except httpx.StreamClosed:
-                        # Backend closed the stream; end generator cleanly
-                        logger.info("mcp proxy: backend stream closed")
-                        return
-                    except Exception as e:
-                        logger.warning("mcp proxy: stream error: %s", e)
-                        return
-                    finally:
+# Hop-by-hop headers per RFC 7230 we never forward directly
+_HOP_BY_HOP = {"connection", "keep-alive", "proxy-authenticate", "proxy-authorization", "te", "trailer", "transfer-encoding", "upgrade"}
+
+def _filter_response_headers(h: dict[str, str]) -> dict[str, str]:
+    """Remove hop-by-hop headers (RFC 7230)."""
+    return {k: v for k, v in h.items() if k.lower() not in _HOP_BY_HOP}
+
+def _forward_request_headers(req: Request) -> dict[str, str]:
+    """Whitelist and normalize headers we forward to backend."""
+    allowed = {"accept", "content-type", "authorization", "x-api-key", "x-bridge-key"}
+    out: Dict[str, str] = {}
+    for k, v in req.headers.items():
+        if k.lower() in allowed:
+            out[k] = v
+    if "accept" in req.headers and "text/event-stream" in req.headers.get("accept", ""):
+        out["Accept"] = req.headers["accept"]
+    return out
+
+BACKEND_MCP_URL = "http://127.0.0.1:3339/mcp"
+HEARTBEAT_SECS = float(os.environ.get("MCP_SSE_HEARTBEAT_SECS", "25")) if os.environ.get("MCP_SSE_HEARTBEAT_SECS") else 0.0
+MAX_RETRIES = int(os.environ.get("MCP_BACKEND_RETRIES", "3"))
+BACKOFF_BASE = float(os.environ.get("MCP_BACKEND_BACKOFF_BASE", "0.3"))
+
+async def _retry_backoff(func: Callable[[], Awaitable[Any]]):
+    last_exc: Exception | None = None
+    for attempt in range(1, MAX_RETRIES + 1):
+        try:
+            return await func()
+        except Exception as e:  # noqa: BLE001
+            last_exc = e
+            if attempt == MAX_RETRIES:
+                break
+            await asyncio.sleep(BACKOFF_BASE * (2 ** (attempt - 1)))
+    if last_exc:
+        raise last_exc
+    raise RuntimeError("retry logic failed without exception")
+
+@app.get("/mcp", name="mcp_sse", operation_id="mcp_sse_stream")
+async def mcp_get_sse(request: Request):  # Returning either JSONResponse or StreamingResponse
+        """SSE pass-through.
+
+        Behavior:
+            * If header `Accept` includes `text/event-stream`, open a streaming
+                connection to the backend MCP server and proxy raw SSE frames.
+            * Otherwise, by default return 406 to signal the client must request
+                SSE explicitly.
+            * If env var `MCP_ALLOW_FALLBACK_GET` is truthy (1/true/yes) and the
+                client did NOT request SSE, return a JSON 200 instructional payload
+                instead of 406. This helps platforms (e.g. ChatGPT) that probe the
+                endpoint once without the SSE Accept header before establishing the
+                real streaming connection.
+
+        Response headers for SSE mode:
+            - Content-Type: text/event-stream
+            - Cache-Control: no-cache
+            - Connection: keep-alive
+            - X-Accel-Buffering: no
+        """
+        accept = request.headers.get("accept", "")
+        wants_sse = "text/event-stream" in accept.lower()
+        allow_fallback = os.environ.get("MCP_ALLOW_FALLBACK_GET", "false").lower() in ("1", "true", "yes")
+        if not wants_sse:
+            if allow_fallback:
+                return JSONResponse(
+                    status_code=200,
+                    content={
+                        "ok": True,
+                        "mode": "fallback",
+                        "detail": "SSE Accept header missing. To open a streaming MCP session send GET /mcp with 'Accept: text/event-stream'.",
+                        "env": {"MCP_ALLOW_FALLBACK_GET": True},
+                        "instructions": [
+                            "curl -H 'Accept: text/event-stream' https://YOUR_DOMAIN/mcp",
+                            "Ensure your client sets Accept header before upgrading connection",
+                        ],
+                    },
+                    headers={"Access-Control-Allow-Origin": "*"},
+                )
+            raise HTTPException(status_code=406, detail="Missing Accept: text/event-stream for SSE endpoint")
+
+        fwd_headers = _forward_request_headers(request)
+        metrics.started_sse += 1
+        metrics.active_sse += 1
+
+        async def sse_iterator() -> AsyncGenerator[bytes, None]:
+            try:
+                async with httpx.AsyncClient(timeout=None) as client:
+                    async def _open():
+                        return client.stream("GET", BACKEND_MCP_URL, headers=fwd_headers)
+                    stream_ctx = await _retry_backoff(_open)  # type: ignore[arg-type]
+                    async with stream_ctx as resp:
+                        if resp.status_code != 200:
+                            yield f"event: error\ndata: backend status {resp.status_code}\n\n".encode()
+                            return
                         try:
-                            await resp.aclose()
-                        except Exception:
-                            pass
+                            last_send = perf_counter()
+                            async for chunk in resp.aiter_raw():
+                                now = perf_counter()
+                                if HEARTBEAT_SECS and (now - last_send) >= HEARTBEAT_SECS:
+                                    yield b": heartbeat\n\n"
+                                    last_send = now
+                                if chunk:
+                                    yield chunk
+                                    last_send = perf_counter()
+                                elif HEARTBEAT_SECS and (now - last_send) >= HEARTBEAT_SECS:
+                                    yield b": heartbeat\n\n"
+                                    last_send = perf_counter()
+                        except (httpx.RemoteProtocolError, httpx.ReadError):
+                            logger.info("mcp SSE: backend stream terminated")
+                        except (ConnectionResetError, asyncio.CancelledError):
+                            logger.info("mcp SSE: client or connection reset")
+                            metrics.aborted_sse += 1
+                        except Exception as e:  # noqa: BLE001
+                            logger.warning("mcp SSE: unexpected stream error: %s", e)
+                            metrics.aborted_sse += 1
+            except (anyio.ClosedResourceError, asyncio.CancelledError, ConnectionResetError):  # type: ignore[name-defined]
+                logger.info("mcp SSE: client disconnected early")
+                metrics.aborted_sse += 1
+            except Exception as e:  # noqa: BLE001
+                logger.warning("mcp SSE: outer error: %s", e)
+                metrics.aborted_sse += 1
+            finally:
+                metrics.active_sse -= 1
+                metrics.completed_sse += 1
 
-                return StreamingResponse(event_generator(), status_code=status, media_type=content_type)
-    except httpx.RequestError as e:
-        raise HTTPException(status_code=502, detail=f"backend mcp proxy error: {e}")
+        headers = {
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+            "Access-Control-Allow-Origin": "*",
+        }
+        return StreamingResponse(sse_iterator(), media_type="text/event-stream", headers=headers)
+
+
+@app.post("/mcp", name="mcp_stream_post", operation_id="mcp_post_stream")
+async def mcp_post_stream(request: Request) -> StreamingResponse:
+    """Bidirectional streaming proxy for POST /mcp.
+
+    Streams request body to backend and yields backend response chunks without buffering.
+    """
+    fwd_headers = _forward_request_headers(request)
+
+    metrics.started_post += 1
+    metrics.active_post += 1
+    async def req_body_iter() -> AsyncGenerator[bytes, None]:
+        try:
+            async for chunk in request.stream():  # type: ignore[attr-defined]
+                if chunk:
+                    metrics.bytes_up_post += len(chunk)
+                    yield chunk
+        except (anyio.ClosedResourceError, asyncio.CancelledError, ConnectionResetError):  # type: ignore[name-defined]
+            logger.info("mcp POST: client upload aborted")
+            metrics.aborted_post += 1
+        except Exception as e:  # noqa: BLE001
+            logger.warning("mcp POST: upload stream error: %s", e)
+            metrics.aborted_post += 1
+
+    try:
+        client = httpx.AsyncClient(timeout=None)
+        async def _open_post():  # returns context manager
+            return client.stream("POST", BACKEND_MCP_URL, headers=fwd_headers, content=req_body_iter())
+        resp_ctx = await _retry_backoff(_open_post)  # type: ignore[arg-type]
+    except Exception as e:  # noqa: BLE001
+        raise HTTPException(status_code=502, detail=f"Failed to connect backend: {e}")
+
+    async def response_iter() -> AsyncGenerator[bytes, None]:
+        try:
+            async with resp_ctx as resp:
+                status = resp.status_code
+                # Filter headers once we have them; yield body regardless
+                preserved = _filter_response_headers({k: v for k, v in resp.headers.items()})
+                # Force pass-through friendly defaults (no buffering hints)
+                preserved.setdefault("Cache-Control", "no-cache")
+                preserved.setdefault("Connection", "keep-alive")
+                preserved["Access-Control-Allow-Origin"] = "*"
+                # Attach headers object outside by closure trick
+                response_iter.preserved_headers = preserved  # type: ignore[attr-defined]
+                response_iter.status_code = status  # type: ignore[attr-defined]
+                async for chunk in resp.aiter_raw():
+                    if chunk:
+                        metrics.bytes_down_post += len(chunk)
+                        yield chunk
+        except (anyio.ClosedResourceError, asyncio.CancelledError, ConnectionResetError):  # type: ignore[name-defined]
+            logger.info("mcp POST: downstream client disconnected")
+            metrics.aborted_post += 1
+        except Exception as e:  # noqa: BLE001
+            logger.warning("mcp POST: response stream error: %s", e)
+            metrics.aborted_post += 1
+        finally:
+            await client.aclose()
+            metrics.active_post -= 1
+            metrics.completed_post += 1
+
+    # Prime an async generator wrapper to capture headers & status lazily
+    gen = response_iter()
+    # Headers/status set inside generator before first body chunk; FastAPI sends defaults until then.
+    return StreamingResponse(gen, media_type="application/octet-stream")
+
+# NOTE: Recommended Uvicorn launch for streaming stability:
+#   uvicorn echo_bridge.main:app --host 127.0.0.1 --port 3333 --http h11 --workers 1
         
 
 
-def _build_dynamic_openapi_spec() -> dict:
-    """Attempt to build a minimal OpenAPI spec from the FastMCP server tools."""
-    tools = []
+def _build_dynamic_openapi_spec() -> dict[str, Any]:
+    """Attempt to build a minimal OpenAPI spec from the FastMCP server tools.
+
+    Returns a dict shaped like an OpenAPI 3 minimal document. Types are broad (Any) to
+    keep implementation flexible while avoiding Pylance 'Unknown' noise.
+    """
+    tools: list[str] = []
     for attr in ("tools", "_tools", "registered_tools", "_registry"):
-        candidate = getattr(mcp_server, attr, None)
+        candidate: Any = getattr(mcp_server, attr, None)
         if candidate:
             if isinstance(candidate, dict):
-                tools = list(candidate.keys())
+                tools = [str(k) for k in candidate.keys()]
             elif isinstance(candidate, (list, tuple)):
-                names = []
+                names: list[str] = []
                 for it in candidate:
                     n = getattr(it, "name", None) or getattr(it, "__name__", None)
-                    if n:
+                    if isinstance(n, str):
                         names.append(n)
                 tools = names
             break
 
-    spec = {
+    spec: dict[str, Any] = {
         "openapi": "3.0.1",
         "info": {"title": "ECHO Bridge MCP (dynamic)", "version": "0.1.0"},
         "paths": {},
@@ -1027,10 +1207,11 @@ def _build_dynamic_openapi_spec() -> dict:
 
     public = _get_public_base_url()
     if public:
-        # dynamic servers entry to help clients discover the public origin
         spec["servers"] = [{"url": public}]
 
-    spec["paths"]["/generate"] = {
+    spec_paths: dict[str, Any] = spec["paths"]  # narrow local ref
+
+    spec_paths["/generate"] = {
         "post": {
             "summary": "Generate text (internal)",
             "requestBody": {"content": {"application/json": {"schema": {"type": "object"}}}},
@@ -1038,7 +1219,7 @@ def _build_dynamic_openapi_spec() -> dict:
         }
     }
 
-    spec["paths"]["/bridge/link_echo_generate/echo_generate"] = {
+    spec_paths["/bridge/link_echo_generate/echo_generate"] = {
         "post": {
             "summary": "Bridge proxy for echo_generate tool",
             "requestBody": {"content": {"application/json": {"schema": {"type": "object"}}}},

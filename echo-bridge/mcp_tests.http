@@ -1,0 +1,30 @@
+### Local OpenAPI
+GET http://127.0.0.1:3333/openapi.json
+Accept: application/json
+
+### Public Manifest (if tunnel)
+GET {{PUBLIC_BASE_URL}}/chatgpt_tool_manifest.json
+Accept: application/json
+
+### MCP GET without SSE (expect 406 unless fallback enabled)
+GET http://127.0.0.1:3333/mcp
+Accept: application/json
+
+### MCP GET with SSE
+GET http://127.0.0.1:3333/mcp
+Accept: text/event-stream
+
+### MCP POST streaming (basic init message)
+POST http://127.0.0.1:3333/mcp
+Accept: application/json
+Content-Type: application/json
+
+{"jsonrpc":"2.0","id":1,"method":"ping","params":{}}
+
+### Remote SSE (set tunnel base)
+GET {{PUBLIC_BASE_URL}}/mcp
+Accept: text/event-stream
+
+### Remote fallback GET (no SSE header)
+GET {{PUBLIC_BASE_URL}}/mcp
+Accept: application/json

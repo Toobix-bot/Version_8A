@@ -2,102 +2,76 @@
   "openapi": "3.0.1",
   "info": {
     "title": "ECHO Bridge MCP (dynamic)",
-    "version": "0.1.0"
+    "version": "0.1.0",
+    "description": "ECHO Bridge API: generate content and list stored resources."
   },
+  "servers": [
+    { "url": "https://michelle-characters-breaks-tim.trycloudflare.com" }
+  ],
   "paths": {
     "/generate": {
       "post": {
-        "summary": "Generate text (internal)",
+        "summary": "Generate text based on a prompt and optional context IDs",
+        "operationId": "generateText",
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object"
+                "type": "object",
+                "properties": {
+                  "prompt": { "type": "string", "description": "User prompt" },
+                  "contextIds": { "type": "array", "items": { "type": "integer" }, "description": "Optional resource IDs providing context" }
+                },
+                "required": ["prompt"]
               }
             }
           }
         },
         "responses": {
-          "200": {
-            "description": "OK"
-          }
+          "200": { "description": "Generated text returned" }
         }
       }
     },
     "/bridge/link_echo_generate/echo_generate": {
       "post": {
         "summary": "Bridge proxy for echo_generate tool",
+        "operationId": "bridgeEchoGenerate",
         "requestBody": {
           "content": {
             "application/json": {
-              "schema": {
-                "type": "object"
-              }
+              "schema": { "$ref": "#/paths/~1generate/post/requestBody/content/application~1json/schema" }
             }
           }
         },
         "responses": {
-          "200": {
-            "description": "OK"
-          }
+          "200": { "description": "OK" }
         }
       }
     },
     "/resources": {
       "get": {
         "summary": "List resources (search or recent chunks)",
+        "operationId": "listResources",
         "parameters": [
-          {
-            "name": "q",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "required": false
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "default": 20
-            }
-          }
+          { "name": "q", "in": "query", "schema": { "type": "string" }, "required": false },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 20 } }
         ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
+        "responses": { "200": { "description": "OK" } }
       }
     },
     "/resources/{id}": {
       "get": {
         "summary": "Open resource by id",
+        "operationId": "openResource",
         "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "schema": {
-              "type": "integer"
-            },
-            "required": true
-          }
+          { "name": "id", "in": "path", "schema": { "type": "integer" }, "required": true }
         ],
         "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "404": {
-            "description": "Not Found"
-          }
+          "200": { "description": "OK" },
+          "404": { "description": "Not Found" }
         }
       }
     }
-  },
-  "servers": [
-    {
-      "url": "https://arrive-llc-workforce-handbook.trycloudflare.com"
-    }
-  ]
+  }
 }
