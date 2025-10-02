@@ -88,15 +88,7 @@ def load_settings() -> Settings:
 
 
 settings = load_settings()
-settings.workspace_dir.mkdir(parents=True, exist_ok=True)
-settings.db_path.parent.mkdir(parents=True, exist_ok=True)
-init_db(settings.db_path)
-try:
-    soul_root = Path(__file__).resolve().parent.parent
-    soul = load_soul(soul_root, timeline_path=Path("./echo-bridge/data/timeline.jsonl"))
-    init_soul(soul)
-except Exception:
-    pass
+# DB and soul initialization moved to lifespan handler for proper startup error handling
 
 
 class Health(BaseModel):
@@ -175,23 +167,50 @@ async def lifespan(app: FastAPI):
     the recommended modern FastAPI pattern.
     """
     # Run startup routines (they are defined further down in the module).
+    
+    # 1. Initialize database (idempotent, with error handling)
     try:
-        try:
-            write_runtime_manifests()
-        except Exception:
-            logger.exception("write_runtime_manifests failed during startup")
-        try:
-            _on_startup_write_public_specs()
-        except Exception:
-            logger.exception("_on_startup_write_public_specs failed during startup")
-        try:
-            generate_public_specs_on_startup()
-        except Exception:
-            logger.exception("generate_public_specs_on_startup failed during startup")
+        logger.info("Initializing workspace and database...")
+        settings.workspace_dir.mkdir(parents=True, exist_ok=True)
+        settings.db_path.parent.mkdir(parents=True, exist_ok=True)
+        init_db(settings.db_path)
+        logger.info(f"Database initialized at {settings.db_path}")
+    except Exception as e:
+        logger.exception(f"CRITICAL: Database initialization failed: {e}")
+        raise  # Fatal error, app should not start without DB
+    
+    # 2. Initialize soul system (optional, non-fatal)
+    try:
+        logger.info("Loading soul system...")
+        soul_root = Path(__file__).resolve().parent.parent
+        soul = load_soul(soul_root, timeline_path=Path("./echo-bridge/data/timeline.jsonl"))
+        init_soul(soul)
+        logger.info("Soul system loaded successfully")
+    except Exception as e:
+        logger.warning(f"Soul system initialization failed (non-fatal): {e}")
+        # Continue without soul - this is optional functionality
+    
+    # 3. Generate public specs and manifests
+    try:
+        write_runtime_manifests()
     except Exception:
-        logger.exception("unexpected error during startup lifespan")
-    # Yield to run the app; no shutdown cleanup required currently.
+        logger.exception("write_runtime_manifests failed during startup")
+    try:
+        _on_startup_write_public_specs()
+    except Exception:
+        logger.exception("_on_startup_write_public_specs failed during startup")
+    try:
+        generate_public_specs_on_startup()
+    except Exception:
+        logger.exception("generate_public_specs_on_startup failed during startup")
+    
+    logger.info("Startup complete, app ready to serve requests")
+    
+    # Yield to run the app
     yield
+    
+    # Shutdown cleanup (if needed in future)
+    logger.info("Shutting down gracefully...")
 
 
 app = FastAPI(title="ECHO-BRIDGE", lifespan=lifespan)
@@ -209,6 +228,24 @@ class Metrics:
     aborted_post: int = 0
     bytes_up_post: int = 0
     bytes_down_post: int = 0
+
+    def snapshot(self) -> dict[str, dict[str, int]]:
+        return {
+            "sse": {
+                "active": self.active_sse,
+                "started": self.started_sse,
+                "completed": self.completed_sse,
+                "aborted": self.aborted_sse,
+            },
+            "post": {
+                "active": self.active_post,
+                "started": self.started_post,
+                "completed": self.completed_post,
+                "aborted": self.aborted_post,
+                "bytes_up": self.bytes_up_post,
+                "bytes_down": self.bytes_down_post,
+            },
+        }
 
 
 metrics = Metrics()
@@ -554,27 +591,10 @@ def serve_public_manifest() -> JSONResponse:
         raise HTTPException(status_code=500, detail=f"Failed to read public chatgpt manifest: {e}")
 
 
-@app.get("/public/openapi.json")
-def serve_public_openapi() -> JSONResponse:
-    p = public_dir / "openapi.json"
-    if not p.exists():
-        p = public_dir / "openapi.generated.json"
-    if not p.exists():
-        raise HTTPException(status_code=404, detail="openapi.json not found")
-    try:
-        data = _load_json_file(p)
-        public = _get_public_base_url()
-        if public:
-            data = _recursive_replace_origins(data, public)
-        headers = {
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "GET,POST,OPTIONS,PUT,PATCH,DELETE",
-            "Access-Control-Allow-Headers": "Authorization,Content-Type,X-API-Key,X-Bridge-Key",
-            "Access-Control-Allow-Credentials": "true",
-        }
-        return JSONResponse(content=data, media_type="application/json", headers=headers)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to read public openapi: {e}")
+# DUPLICATE REMOVED - second definition commented out (canonical version exists at line ~360)
+# @app.get("/public/openapi.json")
+# def serve_public_openapi() -> JSONResponse:
+#     ...
 
 
 def write_runtime_manifests() -> None:
@@ -729,8 +749,85 @@ def health() -> Health:
 
 
 @app.get("/healthz")
-def healthz() -> dict[str, str]:
-    return {"status": "ok"}
+def healthz() -> dict[str, Any]:
+    """
+    Comprehensive health check with database connectivity probe.
+    Returns structured JSON with status, timestamp, and component health.
+    """
+    import time
+    
+    health_status = {
+        "status": "healthy",
+        "timestamp": int(time.time()),
+        "components": {}
+    }
+    
+    # Check database connectivity
+    try:
+        conn = get_conn()
+        cursor = conn.cursor()
+        cursor.execute("SELECT 1")
+        result = cursor.fetchone()
+        conn.close()
+        
+        if result and result[0] == 1:
+            health_status["components"]["database"] = {
+                "status": "healthy",
+                "message": "Database connection OK"
+            }
+        else:
+            health_status["components"]["database"] = {
+                "status": "unhealthy",
+                "message": "Database query returned unexpected result"
+            }
+            health_status["status"] = "degraded"
+    except Exception as e:
+        health_status["components"]["database"] = {
+            "status": "unhealthy",
+            "message": f"Database connection failed: {str(e)}"
+        }
+        health_status["status"] = "unhealthy"
+    
+    # Check workspace directory
+    try:
+        if settings.workspace_dir.exists() and settings.workspace_dir.is_dir():
+            health_status["components"]["workspace"] = {
+                "status": "healthy",
+                "message": f"Workspace accessible at {settings.workspace_dir}"
+            }
+        else:
+            health_status["components"]["workspace"] = {
+                "status": "unhealthy",
+                "message": "Workspace directory not accessible"
+            }
+            health_status["status"] = "degraded"
+    except Exception as e:
+        health_status["components"]["workspace"] = {
+            "status": "unhealthy",
+            "message": f"Workspace check failed: {str(e)}"
+        }
+        health_status["status"] = "degraded"
+    
+    # Check soul system (optional component)
+    try:
+        soul_state = get_soul()
+        if soul_state is not None:
+            health_status["components"]["soul"] = {
+                "status": "healthy",
+                "message": "Soul system operational"
+            }
+        else:
+            health_status["components"]["soul"] = {
+                "status": "not_initialized",
+                "message": "Soul system not loaded (optional)"
+            }
+    except Exception as e:
+        health_status["components"]["soul"] = {
+            "status": "not_initialized",
+            "message": f"Soul system check failed (optional): {str(e)}"
+        }
+    
+    return health_status
 
 
 @app.post("/ingest/text", response_model=IngestResponse, dependencies=[Depends(get_api_key)])
@@ -750,6 +847,123 @@ def ingest(req: IngestRequest) -> IngestResponse:
         meta["tags"] = req.tags
     added = add_chunks(req.source, req.title, req.texts, meta)
     return IngestResponse(added=added)
+
+
+@app.post("/seed", dependencies=[Depends(get_api_key)])
+def seed_demo_data() -> dict[str, Any]:
+    """
+    Populate database with sample notes, tags, and references for testing/demo.
+    Idempotent: checks for existing data before inserting.
+    """
+    try:
+        conn = get_conn()
+        cursor = conn.cursor()
+        
+        # Check if we already have demo data
+        cursor.execute("SELECT COUNT(*) FROM chunks WHERE doc_source = 'demo_seed'")
+        existing_count = cursor.fetchone()[0]
+        
+        if existing_count > 0:
+            conn.close()
+            return {
+                "status": "skipped",
+                "message": f"Demo data already exists ({existing_count} chunks with source 'demo_seed')",
+                "chunks_added": 0,
+                "tags_added": 0
+            }
+        
+        # Sample demo notes
+        demo_notes = [
+            {
+                "title": "Getting Started with Toobix",
+                "text": "Toobix is a local-first life management platform. It emphasizes privacy, [[federation]], and [[plugin architecture]]. Start by creating your first note!",
+                "tags": ["tutorial", "getting-started"]
+            },
+            {
+                "title": "Plugin Architecture",
+                "text": "The plugin system allows hot-reload of modules. Plugins can extend [[Notes]], [[Tasks]], and [[Calendar]] functionality. Written in TypeScript with clear API boundaries.",
+                "tags": ["architecture", "plugins"]
+            },
+            {
+                "title": "Federation Concepts",
+                "text": "Toobix uses simplified [[ActivityPub]] or [[AT Protocol]] for federation. Your data stays local, but you can selectively share with trusted peers. [[DID]]-based identity.",
+                "tags": ["federation", "privacy"]
+            },
+            {
+                "title": "Local-First Philosophy",
+                "text": "All data lives in SQLite on your machine. No mandatory cloud sync. Optional backup to S3-compatible storage using [[Litestream]]. You own your data.",
+                "tags": ["philosophy", "local-first"]
+            },
+            {
+                "title": "AI Integration",
+                "text": "Use [[Ollama]] for local LLM inference or connect to cloud providers like Groq. AI features: semantic search, auto-tagging, summary generation, and more.",
+                "tags": ["ai", "ollama", "features"]
+            },
+            {
+                "title": "Daily Notes",
+                "text": "Create daily notes with YYYY-MM-DD format. Backlinks automatically connect related concepts. Use templates for recurring structures.",
+                "tags": ["notes", "daily-notes"]
+            },
+            {
+                "title": "Graph Visualization",
+                "text": "See connections between notes with [[D3.js]] or [[Cytoscape.js]]. Filter by tags, date range, or link types. Explore knowledge visually.",
+                "tags": ["visualization", "graph"]
+            },
+            {
+                "title": "Search Capabilities",
+                "text": "Full-text search powered by [[Orama]]. Semantic search with embeddings. Search across notes, tasks, and calendar events instantly.",
+                "tags": ["search", "features"]
+            }
+        ]
+        
+        chunks_added = 0
+        tags_added = 0
+        
+        # Insert demo notes
+        for note in demo_notes:
+            # Insert chunk
+            cursor.execute(
+                "INSERT INTO chunks (doc_source, doc_title, text, meta_json) VALUES (?, ?, ?, ?)",
+                ("demo_seed", note["title"], note["text"], json.dumps({"tags": note["tags"]}))
+            )
+            chunk_id = cursor.lastrowid
+            chunks_added += 1
+            
+            # Insert tags
+            for tag_name in note["tags"]:
+                # Get or create tag
+                cursor.execute("SELECT id FROM tags WHERE name = ?", (tag_name,))
+                tag_row = cursor.fetchone()
+                
+                if tag_row:
+                    tag_id = tag_row[0]
+                else:
+                    cursor.execute("INSERT INTO tags (name) VALUES (?)", (tag_name,))
+                    tag_id = cursor.lastrowid
+                    tags_added += 1
+                
+                # Link chunk to tag
+                cursor.execute(
+                    "INSERT OR IGNORE INTO chunk_tags (chunk_id, tag_id) VALUES (?, ?)",
+                    (chunk_id, tag_id)
+                )
+        
+        conn.commit()
+        conn.close()
+        
+        logger.info(f"Seeded database: {chunks_added} chunks, {tags_added} new tags")
+        
+        return {
+            "status": "success",
+            "message": "Demo data seeded successfully",
+            "chunks_added": chunks_added,
+            "tags_added": tags_added,
+            "demo_notes": [n["title"] for n in demo_notes]
+        }
+        
+    except Exception as e:
+        logger.exception(f"Seed operation failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Seed failed: {str(e)}")
 
 
 @app.get("/search", response_model=SearchResponse)
@@ -1749,13 +1963,11 @@ async def panel() -> HTMLResponse:
 async def panel_data() -> JSONResponse:
     """Return combined readiness + metrics for richer panel polling."""
     ready_resp = await action_ready()
-    ready = ready_resp.body
     try:
-        import json
-        ready_json = json.loads(ready)
+        ready_json = json.loads(ready_resp.body.decode("utf-8"))
     except Exception:
         ready_json = {"error": "parse_ready_failed"}
-    metrics_snapshot = METRICS.snapshot()
+    metrics_snapshot = metrics.snapshot()
     payload = {"readiness": ready_json, "metrics": metrics_snapshot}
     return JSONResponse(content=payload)
 
@@ -1784,34 +1996,11 @@ def mcp_openapi_dynamic() -> JSONResponse:
         raise HTTPException(status_code=500, detail=f"Failed to build dynamic openapi spec: {e}")
 
 
-# Explicitly serve manifest and openapi JSON files with application/json to
-# ensure tunnels/proxies (ngrok) receive the correct Content-Type and body.
-@app.get("/public/chatgpt_tool_manifest.json")
-def serve_chatgpt_manifest(request: Request) -> JSONResponse:
-    public_dir = Path(__file__).resolve().parent.parent / "public"
-    manifest_path = public_dir / "chatgpt_tool_manifest.json"
-    if not manifest_path.exists():
-        raise HTTPException(status_code=404, detail="Manifest not found")
-    try:
-        data = _load_json_file(manifest_path)
-        # Log the client for debugging ngrok/proxy behavior
-        client = request.client.host if request.client else "unknown"
-        logger.info("serving_manifest", extra={"client": client, "path": "/public/chatgpt_tool_manifest.json"})
-        return JSONResponse(content=data, media_type="application/json")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to read manifest: {e}")
-
-
-@app.get("/public/openapi.json")
-def serve_openapi(request: Request) -> JSONResponse:
-    public_dir = Path(__file__).resolve().parent.parent / "public"
-    openapi_path = public_dir / "openapi.json"
-    if not openapi_path.exists():
-        raise HTTPException(status_code=404, detail="OpenAPI not found")
-    try:
-        data = _load_json_file(openapi_path)
-        client = request.client.host if request.client else "unknown"
-        logger.info("serving_openapi", extra={"client": client, "path": "/public/openapi.json"})
-        return JSONResponse(content=data, media_type="application/json")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to read openapi: {e}")
+# DUPLICATES REMOVED - third definitions commented out (canonical versions exist at line ~360 and ~540)
+# @app.get("/public/chatgpt_tool_manifest.json")
+# def serve_chatgpt_manifest(request: Request) -> JSONResponse:
+#     ...
+#
+# @app.get("/public/openapi.json")
+# def serve_openapi(request: Request) -> JSONResponse:
+#     ...

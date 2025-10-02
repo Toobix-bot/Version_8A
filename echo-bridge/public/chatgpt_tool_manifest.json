@@ -9,7 +9,7 @@
   },
   "api": {
     "type": "openapi",
-    "url": "http://127.0.0.1:3333/public/openapi.json",
+    "url": "https://multiplicative-unapprehendably-marisha.ngrok-free.dev/openapi.json",
     "is_user_authenticated": false
   },
   "contact_email": "admin@example.com",
